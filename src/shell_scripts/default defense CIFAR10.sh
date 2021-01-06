@@ -1,21 +1,21 @@
 #!/bin/bash 
 
-COMMAND="python train_classifier.py --autoencoder_train_supervised"
+COMMAND="python -m neuro-inspired-defense.src.train_classifier.py --autoencoder_train_supervised"
 echo $COMMAND
 eval $COMMAND
 
-COMMAND="python run_attack.py --autoencoder_train_supervised"
+COMMAND="python -m neuro-inspired-defense.src.run_attack.py --autoencoder_train_supervised"
 echo $COMMAND
 eval $COMMAND
 
-COMMAND="python run_attack.py --autoencoder_train_supervised --attack_whitebox_type=W-NFGA"
+COMMAND="python -m neuro-inspired-defense.src.run_attack.py --autoencoder_train_supervised --attack_whitebox_type=W-NFGA"
 echo $COMMAND
 eval $COMMAND
 
-COMMAND="python run_attack.py --autoencoder_train_supervised --attack_whitebox_type=W-NFGA --attack_num_steps=100 --attack_step_size=0.00196 "
+COMMAND="python -m neuro-inspired-defense.src.run_attack.py --autoencoder_train_supervised --attack_whitebox_type=W-NFGA --attack_num_steps=100 --attack_step_size=0.00196 "
 echo $COMMAND
 eval $COMMAND
 
-COMMAND="python run_attack.py --autoencoder_train_supervised --attack_box_type=other --attack_otherbox_type=transfer --attack_transfer_file=white_W-AIGA_PGD_EOT_normalized_eps_8_Ne_40_Ns_20_ss_1_Nr_1_resnet_sgd_cyc_0.0500_ep_70_ps_4_st_2_l_1.0_n_500_it_1000_top_T_dropout_autoencoder_sgd_cyc_0.0500_T_50_p_0.95_US_ep_50.npy"
+COMMAND="python -m neuro-inspired-defense.src.run_attack.py --autoencoder_train_supervised --attack_box_type=other --attack_otherbox_type=transfer --attack_transfer_file=white_W-AIGA_PGD_EOT_normalized_eps_8_Ne_40_Ns_20_ss_1_Nr_1_resnet_sgd_cyc_0.0500_ep_70_ps_4_st_2_l_1.0_n_500_it_1000_top_T_dropout_autoencoder_sgd_cyc_0.0500_T_50_p_0.95_US_ep_50.npy"
 echo $COMMAND
 eval $COMMAND
