@@ -25,13 +25,10 @@ from deepillusion.torchattacks import (
 from .utils.read_datasets import(
     cifar10,
     cifar10_from_file,
-    cifar10_initialization_from_file,
     tiny_imagenet,
     tiny_imagenet_from_file,
-    tiny_imagenet_initialization_from_file,
     imagenette,
-    imagenette_from_file,
-    imagenette_initialization_from_file
+    imagenette_from_file
 )
 from deepillusion.torchdefenses import adversarial_test
 
@@ -232,17 +229,6 @@ def main():
         ),
     )
 
-    if args.attack_initialization_file:
-        if args.dataset == "CIFAR10":
-            initialization_loader = cifar10_initialization_from_file(args)
-        elif args.dataset == "Tiny-ImageNet":
-            initialization_loader = tiny_imagenet_initialization_from_file(
-                args)
-        elif args.dataset == "Imagenette":
-            initialization_loader = imagenette_initialization_from_file(args)
-        else:
-            raise NotImplementedError
-
     test_loss = 0
     correct = 0
 
@@ -272,10 +258,7 @@ def main():
         else:
             raise NotImplementedError
 
-    if args.attack_initialization_file:
-        loaders = zip(test_loader, initialization_loader)
-    else:
-        loaders = test_loader
+    loaders = test_loader
 
     start = time.time()
     for batch_idx, items in enumerate(
@@ -284,20 +267,11 @@ def main():
         if args.defense_nbimgs < (batch_idx + 1) * args.test_batch_size:
             break
 
-        if args.attack_initialization_file:
-            (data, target), (initialization, _) = items
-            data = data.to(device)
-            target = target.to(device)
-            initialization = initialization.to(device)
-            initialization -= data
-        else:
-            data, target = items
-            data = data.to(device)
-            target = target.to(device)
+        data, target = items
+        data = data.to(device)
+        target = target.to(device)
 
         if not read_from_file:
-            if args.attack_initialization_file:
-                attack_params["initialization"] = initialization
             attack_batch = generate_attack(
                 args, model, data, target, adversarial_args)
             data += attack_batch

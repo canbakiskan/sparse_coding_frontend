@@ -183,7 +183,8 @@ def main():
             else:
                 return 1.0
 
-        scheduler = MultiplicativeLR(optimizer, lr_fun)
+        scheduler = torch.optim.lr_scheduler.MultiplicativeLR(
+            optimizer, lr_fun)
     else:
         raise NotImplementedError
 

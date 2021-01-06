@@ -141,9 +141,6 @@ def attack_params_string(args):
         if args.attack_whitebox_type == "W-NFGA" and args.attack_quantization_BPDA_steepness != 0.0:
             attack_params_string += f"_steep_{args.attack_quantization_BPDA_steepness:.1f}"
 
-        if args.attack_initialization_file:
-            attack_params_string += "_initialized"
-
     return attack_params_string
 
 

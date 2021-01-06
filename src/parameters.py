@@ -262,13 +262,6 @@ def get_arguments():
     )
 
     adv_testing.add_argument(
-        "--attack_initialization_file",
-        type=str,
-        default=None,
-        help="Source file for the initialization of attack (only filename)",
-    )
-
-    adv_testing.add_argument(
         "--attack_transfer_file",
         type=str,
         default=None,
