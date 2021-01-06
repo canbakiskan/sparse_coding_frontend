@@ -14,7 +14,7 @@ import numpy as np
 import torch
 import torch.nn.functional as F
 from .models.combined import Combined, Combined_inner_BPDA_identity
-from ..adversarial_framework.torchattacks import (
+from deepillusion.torchattacks import (
     PGD,
     PGD_EOT,
     FGSM,
@@ -33,7 +33,7 @@ from .utils.read_datasets import(
     imagenette_from_file,
     imagenette_initialization_from_file
 )
-from ..adversarial_framework.torchdefenses import adversarial_test
+from deepillusion.torchdefenses import adversarial_test
 
 import logging
 import sys

@@ -31,7 +31,7 @@ from .utils.namers import (
 
 from .models.combined import Combined
 from .utils.get_modules import get_autoencoder
-from ..adversarial_framework.torchattacks import (
+from deepillusion.torchattacks import (
     PGD,
     PGD_EOT,
     FGSM,
@@ -39,7 +39,7 @@ from ..adversarial_framework.torchattacks import (
     PGD_EOT_normalized,
     PGD_EOT_sign,
 )
-from ..adversarial_framework.torchdefenses import (
+from deepillusion.torchdefenses import (
     adversarial_epoch,
     adversarial_test,
 )

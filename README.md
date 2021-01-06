@@ -79,28 +79,6 @@ Repository
 │   README.md
 │   requirements.txt            Required python libraries to run codes
 │	
-│
-│───adversarial_framework
-│   │  
-│   │
-│   │───torchattacks
-│   │   │   _fgsm.py                     Fast Gradient Sign Method
-│   │   │   _rfgsm.py                    Random Start + Fast Gradient Sign Method
-│   │   │   _pgd.py                      Projected Gradient Descent (includes EOT versions)
-│   │   │   _bim.py                      Basic Iterative Method
-│   │   │   _soft_attacks.py             Soft attack functions
-│   │   │
-│   │   └───analysis
-│   │       │   _perturbation_statistics     Perturbations statistics functions
-│   │       │   _evaluate                    Whitebox, blackbox evaluations codes (test functions)
-│   │       │   
-│   │       └───plot 
-│   │           │   _loss_landscape.py       Loss landscape plotter
-│   │              
-│   │
-│   └───torchdefenses
-│       │   _adversarial_train_test.py       Adversarial Training - Adversarial Testing
-│        
 └───src     
     │   learn_patch_dict.py                  Sparse dictionary learning
     │   parameters.py                        Main file for parameters
