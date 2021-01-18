@@ -7,6 +7,7 @@ from torch.nn.functional import dropout
 def take_top_T(x, T):
     values, indices = torch.topk(x.abs(), T, dim=1)
     dropped = torch.zeros_like(x).scatter(1, indices, values)
+    dropped = dropped * x.sign()  # <-- this should be included
     return dropped
 
 
