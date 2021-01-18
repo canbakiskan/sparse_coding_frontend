@@ -13,7 +13,7 @@ from .utils.get_modules import (
 import numpy as np
 import torch
 import torch.nn.functional as F
-from .models.combined import Combined, Combined_inner_BPDA_identity
+from .models.combined import Combined, Combined_inner_BPDA_identity, Combined_inner_BPDA_gaussianblur
 from deepillusion.torchattacks import (
     PGD,
     PGD_EOT,
@@ -138,6 +138,9 @@ def main():
 
         if args.attack_box_type == "white" and args.attack_whitebox_type == "W-AIGA":
             model = Combined_inner_BPDA_identity(autoencoder, classifier)
+        elif args.attack_box_type == "white" and args.attack_whitebox_type == "W-AGGA":
+            model = Combined_inner_BPDA_gaussianblur(
+                autoencoder, classifier, args)
         else:
             if (
                 args.attack_box_type == "white"
