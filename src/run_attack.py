@@ -152,8 +152,7 @@ def main():
                 args.attack_box_type == "white"
                 and args.attack_whitebox_type == "W-NFGA"
             ):
-                # autoencoder.set_BPDA_type("maxpool_like")
-                autoencoder.set_BPDA_type("identity")
+                autoencoder.set_BPDA_type("maxpool_like")
 
             model = Combined(autoencoder, classifier)
 
