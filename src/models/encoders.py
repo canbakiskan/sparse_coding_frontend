@@ -104,16 +104,21 @@ class top_T_encoder(encoder_base_class):
 
     def set_BPDA_type(self, BPDA_type):
         self.BPDA_type = BPDA_type
-        from .bpda import take_top_T_BPDA_identity
+        from .bpda import take_top_T_BPDA_identity, take_top_T_BPDA_top_U
 
         if self.BPDA_type == "maxpool_like":
             self.take_top_T = take_top_T
+        elif self.BPDA_type == "top_U":
+            self.take_top_T = take_top_T_BPDA_top_U().apply
         elif self.BPDA_type == "identity":
             self.take_top_T = take_top_T_BPDA_identity().apply
 
     def forward(self, x):
         x = super(top_T_encoder, self).forward(x)
-        x = self.take_top_T(x, self.T)
+        if self.BPDA_type == "top_U":
+            x = self.take_top_T(x, self.T,  2*self.T)
+        else:
+            x = self.take_top_T(x, self.T)
         return x
 
 
@@ -122,7 +127,7 @@ class top_T_quant_encoder(encoder_base_class):
         super(top_T_quant_encoder, self).__init__(args)
 
         self.T = args.top_T
-        if args.attack_quantization_BPDA_steepness == 0.0:
+        if args.attack_quantization_BPDA_steepness == -1.0:
             from .bpda import activation_quantization_BPDA_identity
             self.activation = activation_quantization_BPDA_identity().apply
         else:
@@ -134,16 +139,21 @@ class top_T_quant_encoder(encoder_base_class):
 
     def set_BPDA_type(self, BPDA_type):
         self.BPDA_type = BPDA_type
-        from .bpda import take_top_T_BPDA_identity
+        from .bpda import take_top_T_BPDA_identity, take_top_T_BPDA_top_U
 
         if self.BPDA_type == "maxpool_like":
             self.take_top_T = take_top_T
+        elif self.BPDA_type == "top_U":
+            self.take_top_T = take_top_T_BPDA_top_U().apply
         elif self.BPDA_type == "identity":
             self.take_top_T = take_top_T_BPDA_identity().apply
 
     def forward(self, x):
         x = super(top_T_quant_encoder, self).forward(x)
-        x = self.take_top_T(x, self.T)
+        if self.BPDA_type == "top_U":
+            x = self.take_top_T(x, self.T, 2*self.T)
+        else:
+            x = self.take_top_T(x, self.T)
         x = self.activation(x, self.l1_norms, self.jump)
         return x
 
@@ -158,10 +168,12 @@ class top_T_dropout_encoder(encoder_base_class):
 
     def set_BPDA_type(self, BPDA_type):
         self.BPDA_type = BPDA_type
-        from .bpda import take_top_T_dropout_BPDA_identity
+        from .bpda import take_top_T_dropout_BPDA_identity, take_top_T_dropout_BPDA_top_U
 
         if self.BPDA_type == "maxpool_like":
             self.take_top_T_dropout = take_top_T_dropout
+        elif self.BPDA_type == "top_U":
+            self.take_top_T = take_top_T_dropout_BPDA_top_U().apply
         elif self.BPDA_type == "identity":
             self.take_top_T_dropout = take_top_T_dropout_BPDA_identity().apply
 
