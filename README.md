@@ -1,4 +1,4 @@
-
+WARNING: top_T taking was wrongly implemented, fixed in commit 3b4d60aa. This makes already existing checkpoints useless.
 
 # A Neuro-Inspired Autoencoding Defense Against Adversarial Perturbations
 
