@@ -15,6 +15,18 @@ class take_top_T_dropout_BPDA_identity(torch.autograd.Function):
         return grad_output, None, None
 
 
+class take_top_T_dropout_BPDA_top_U(torch.autograd.Function):
+    @staticmethod
+    def forward(ctx, x, T, p, U):
+        ctx.save_for_backward(take_top_T(x, U * T)*x)
+        return take_top_T_dropout(x, T, p)
+
+    @staticmethod
+    def backward(ctx, grad_output):
+        top_U, = ctx.saved_tensors
+        return grad_output*top_U.sign(), None, None, None
+
+
 class take_top_T_BPDA_identity(torch.autograd.Function):
     @staticmethod
     def forward(ctx, x, T):
@@ -22,7 +34,19 @@ class take_top_T_BPDA_identity(torch.autograd.Function):
 
     @staticmethod
     def backward(ctx, grad_output):
-        return grad_output, None, None
+        return grad_output, None
+
+
+class take_top_T_BPDA_top_U(torch.autograd.Function):
+    @staticmethod
+    def forward(ctx, x, T, U):
+        ctx.save_for_backward(take_top_T(x, U * T)*x)
+        return take_top_T(x, T)
+
+    @staticmethod
+    def backward(ctx, grad_output):
+        top_U, = ctx.saved_tensors
+        return grad_output*top_U.sign(), None, None
 
 
 class dropout_BPDA_identity(torch.autograd.Function):
@@ -45,7 +69,7 @@ class one_module_BPDA_identity(torch.autograd.Function):
 
     @staticmethod
     def backward(ctx, grad_outputs):
-        return (grad_outputs, None)
+        return grad_outputs, None
 
 
 class one_module_BPDA_gaussianblur(torch.autograd.Function):
@@ -75,7 +99,7 @@ class one_module_BPDA_gaussianblur(torch.autograd.Function):
 
         # torch._C.set_grad_enabled(prev)
 
-        return (grad_inputs, None)
+        return grad_inputs, None
 
 
 class activation_quantization_BPDA_smooth_step(torch.autograd.Function):
