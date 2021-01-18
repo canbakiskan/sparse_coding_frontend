@@ -247,7 +247,7 @@ def get_arguments():
         "--attack_whitebox_type",
         type=str,
         default="W-AIGA",
-        choices=["SW", "W-NFGA", "W-AIGA"],
+        choices=["SW", "W-NFGA", "W-AIGA", "W-AGGA"],
         metavar="",
         help="whitebox attack type",
     )
@@ -478,7 +478,7 @@ def get_arguments():
     defense.add_argument(
         "--defense_nbimgs",
         type=int,
-        default=10000,
+        default=0,
         metavar="nb_images",
         help="Number of images to process (default: 10000-all)",
     )
