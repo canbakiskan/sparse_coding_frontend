@@ -23,6 +23,10 @@ class Normalize(nn.Module):
    These helper functions are built to mirror those in the official TensorFlow implementation.
 """
 
+# Author: lukemelas (github username)
+# Github repo: https://github.com/lukemelas/EfficientNet-PyTorch
+# With adjustments and added comments by workingcoder (github username).
+
 
 ################################################################################
 # Help functions for model architecture

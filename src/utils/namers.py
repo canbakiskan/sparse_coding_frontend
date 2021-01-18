@@ -138,6 +138,8 @@ def attack_params_string(args):
             attack_params_string += f"_Nr_{args.attack_num_restarts}"
         if "RFGSM" in args.attack_method:
             attack_params_string += f"_a_{np.int(np.round(args.attack_alpha*255))}"
+        if args.attack_whitebox_type == "W-AGGA":
+            attack_params_string += f"_sig_{args.ablation_blur_sigma:.2f}"
         if args.attack_whitebox_type == "W-NFGA" and args.attack_quantization_BPDA_steepness != 0.0:
             attack_params_string += f"_steep_{args.attack_quantization_BPDA_steepness:.1f}"
 
