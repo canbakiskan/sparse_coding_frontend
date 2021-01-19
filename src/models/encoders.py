@@ -194,6 +194,24 @@ class top_T_quant_encoder(encoder_base_class):
         return x
 
 
+class top_T_quant_noisy_encoder(top_T_quant_encoder, noisy):
+    def __init__(self, args, BPDA_type="maxpool_like", alpha=1.0):
+        super(top_T_quant_noisy_encoder, self).__init__(args, BPDA_type)
+        noisy.__init__(self, args, alpha)
+        self.alpha = alpha
+
+    def forward(self, x):
+        x = encoder_base_class.forward(self, x)
+        x = self.add_noise(x)
+
+        if self.BPDA_type == "top_U":
+            x = self.take_top_T(x, self.T, 2*self.T)
+        else:
+            x = self.take_top_T(x, self.T)
+        x = self.activation(x, self.l1_norms, self.jump)
+        return x
+
+
 class top_T_dropout_encoder(encoder_base_class, stochastic):
     def __init__(self, args, BPDA_type="maxpool_like"):
         super(top_T_dropout_encoder, self).__init__(args)
@@ -264,6 +282,7 @@ encoder_dict = {
     "top_T_encoder": top_T_encoder,
     "top_T_noisy_encoder": top_T_noisy_encoder,
     "top_T_quant_encoder": top_T_quant_encoder,
+    "top_T_quant_noisy_encoder": top_T_quant_noisy_encoder,
     "top_T_dropout_encoder": top_T_dropout_encoder,
     "top_T_dropout_quant_encoder": top_T_dropout_quant_encoder,
 }

@@ -63,6 +63,12 @@ class top_T_quant_autoencoder(autoencoder_base_class):
             args, "top_T_quant_encoder")
 
 
+class top_T_quant_noisy_autoencoder(autoencoder_base_class):
+    def __init__(self, args):
+        super(top_T_quant_noisy_autoencoder, self).__init__(
+            args, "top_T_quant_noisy_encoder")
+
+
 class top_T_dropout_autoencoder(autoencoder_base_class):
     def __init__(self, args):
         super(top_T_dropout_autoencoder, self).__init__(
@@ -108,7 +114,9 @@ class top_T_quant_resize_autoencoder(autoencoder_base_class):
 autoencoder_dict = {
     "quant_autoencoder": quant_autoencoder,
     "top_T_autoencoder": top_T_autoencoder,
+    "top_T_noisy_autoencoder": top_T_noisy_autoencoder,
     "top_T_quant_autoencoder": top_T_quant_autoencoder,
+    "top_T_quant_noisy_autoencoder": top_T_quant_noisy_autoencoder,
     "top_T_dropout_autoencoder": top_T_dropout_autoencoder,
     "top_T_dropout_quant_autoencoder": top_T_dropout_quant_autoencoder,
     "top_T_dropout_quant_small_autoencoder": top_T_dropout_quant_small_autoencoder,
