@@ -460,6 +460,13 @@ def get_arguments():
         metavar="activation_beta",
         help=" (default: 3.0)",
     )
+    defense.add_argument(
+        "--noise_gamma",
+        type=float,
+        default=1.0,
+        metavar="noise_gamma",
+        help="coefficient in front of l1 scaled noise times epsilon  (default: 1.0)",
+    )
 
     defense.add_argument(
         "--autoencoder_epochs", type=int, default=50, metavar="epochs", help="",
