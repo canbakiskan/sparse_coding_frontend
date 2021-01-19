@@ -66,6 +66,7 @@ class encoder_base_class(nn.Module):
             self.jump.requires_grad = False
 
     def set_l1_norms(self, dictionary):
+        # nn.parameter allows torch.save to save on file
         if dictionary is not None:
             if isinstance(dictionary, torch.Tensor):
                 self.l1_norms = nn.Parameter(
@@ -76,6 +77,11 @@ class encoder_base_class(nn.Module):
                         dictionary, dtype=torch.float).abs().sum(dim=0)
                 )
             self.l1_norms.requires_grad = False
+
+
+class stochastic():
+    def fix_seed(self, is_fixed=True):
+        self.fixed_seed = is_fixed
 
 
 class quant_encoder(encoder_base_class):
@@ -158,7 +164,7 @@ class top_T_quant_encoder(encoder_base_class):
         return x
 
 
-class top_T_dropout_encoder(encoder_base_class):
+class top_T_dropout_encoder(encoder_base_class, stochastic):
     def __init__(self, args, BPDA_type="maxpool_like"):
         super(top_T_dropout_encoder, self).__init__(args)
         self.T = args.top_T
@@ -177,9 +183,6 @@ class top_T_dropout_encoder(encoder_base_class):
         elif self.BPDA_type == "identity":
             self.take_top_T_dropout = take_top_T_dropout_BPDA_identity().apply
 
-    def fix_seed(self, is_fixed=True):
-        self.fixed_seed = True
-
     def forward(self, x):
         x = super(top_T_dropout_encoder, self).forward(x)
         if self.fixed_seed:
@@ -190,7 +193,7 @@ class top_T_dropout_encoder(encoder_base_class):
         return x
 
 
-class top_T_dropout_quant_encoder(encoder_base_class):
+class top_T_dropout_quant_encoder(encoder_base_class, stochastic):
     def __init__(self, args, BPDA_type="maxpool_like"):
         super(top_T_dropout_quant_encoder, self).__init__(args)
         self.T = args.top_T
@@ -214,9 +217,6 @@ class top_T_dropout_quant_encoder(encoder_base_class):
             self.take_top_T_dropout = take_top_T_dropout
         elif self.BPDA_type == "identity":
             self.take_top_T_dropout = take_top_T_dropout_BPDA_identity().apply
-
-    def fix_seed(self, is_fixed=True):
-        self.fixed_seed = True
 
     def forward(self, x):
         x = super(top_T_dropout_quant_encoder, self).forward(x)
