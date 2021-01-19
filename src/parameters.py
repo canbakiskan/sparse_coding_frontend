@@ -423,6 +423,7 @@ def get_arguments():
         choices=[
             "quant_autoencoder",
             "top_T_autoencoder",
+            "top_T_noisy_autoencoder",
             "top_T_quant_autoencoder",
             "top_T_dropout_autoencoder",
             "top_T_dropout_quant_autoencoder",

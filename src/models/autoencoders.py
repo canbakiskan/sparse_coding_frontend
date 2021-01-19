@@ -51,6 +51,12 @@ class top_T_autoencoder(autoencoder_base_class):
         super(top_T_autoencoder, self).__init__(args, "top_T_encoder")
 
 
+class top_T_noisy_autoencoder(autoencoder_base_class):
+    def __init__(self, args):
+        super(top_T_noisy_autoencoder, self).__init__(
+            args, "top_T_noisy_encoder")
+
+
 class top_T_quant_autoencoder(autoencoder_base_class):
     def __init__(self, args):
         super(top_T_quant_autoencoder, self).__init__(
