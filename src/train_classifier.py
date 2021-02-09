@@ -14,13 +14,10 @@ from .models.efficientnet import EfficientNet
 from .models.preact_resnet import PreActResNet101
 from .models.ablation.dropout_resnet import dropout_ResNet
 
-from .train_test_functions import (
-    train,
-    test,
-)
+from .train_test_functions import train, test
 
 from .parameters import get_arguments
-from .utils.read_datasets import cifar10, tiny_imagenet, imagenette
+from .utils.read_datasets import read_dataset
 
 from .utils.namers import (
     autoencoder_ckpt_namer,
@@ -39,10 +36,7 @@ from deepillusion.torchattacks import (
     PGD_EOT_normalized,
     PGD_EOT_sign,
 )
-from deepillusion.torchdefenses import (
-    adversarial_epoch,
-    adversarial_test,
-)
+from deepillusion.torchdefenses import adversarial_epoch, adversarial_test
 from .models.autoencoders import *
 import sys
 
@@ -80,14 +74,7 @@ def main():
     x_max = 1.0
     # L = round((32 - args.defense_patchsize) / args.defense_stride + 1)
 
-    if args.dataset == "CIFAR10":
-        train_loader, test_loader = cifar10(args)
-    elif args.dataset == "Tiny-ImageNet":
-        train_loader, test_loader = tiny_imagenet(args)
-    elif args.dataset == "Imagenette":
-        train_loader, test_loader = imagenette(args)
-    else:
-        raise NotImplementedError
+    train_loader, test_loader = read_dataset(args)
 
     if args.classifier_arch == "resnet":
         classifier = ResNet(num_outputs=args.num_classes).to(device)
@@ -95,12 +82,16 @@ def main():
         classifier = ResNetWide(num_outputs=args.num_classes).to(device)
     elif args.classifier_arch == "efficientnet":
         classifier = EfficientNet.from_name(
-            "efficientnet-b0", num_classes=args.num_classes, dropout_rate=0.2).to(device)
+            "efficientnet-b0", num_classes=args.num_classes, dropout_rate=0.2
+        ).to(device)
     elif args.classifier_arch == "preact_resnet":
         classifier = PreActResNet101(num_classes=args.num_classes).to(device)
     elif args.classifier_arch == "dropout_resnet":
         classifier = dropout_ResNet(
-            dropout_p=args.dropout_p, nb_filters=args.dict_nbatoms, num_outputs=args.num_classes).to(device)
+            dropout_p=args.dropout_p,
+            nb_filters=args.dict_nbatoms,
+            num_outputs=args.num_classes,
+        ).to(device)
     else:
         raise NotImplementedError
 
@@ -150,13 +141,12 @@ def main():
             model.parameters(),
             lr=args.lr,
             weight_decay=args.weight_decay,
-            momentum=args.momentum)
+            momentum=args.momentum,
+        )
 
     elif args.optimizer == "adam":
         optimizer = optim.Adam(
-            model.parameters(),
-            lr=args.lr,
-            weight_decay=args.weight_decay,
+            model.parameters(), lr=args.lr, weight_decay=args.weight_decay
         )
     else:
         raise NotImplementedError
@@ -172,11 +162,11 @@ def main():
         )
     elif args.lr_scheduler == "step":
         scheduler = torch.optim.lr_scheduler.MultiStepLR(
-            optimizer,
-            milestones=[50, 80],
-            gamma=0.1)
+            optimizer, milestones=[50, 80], gamma=0.1
+        )
 
     elif args.lr_scheduler == "mult":
+
         def lr_fun(epoch):
             if epoch % 3 == 0:
                 return 0.962
@@ -283,9 +273,7 @@ def main():
             os.makedirs(args.directory + "checkpoints/classifiers/")
 
         classifier_filepath = classifier_ckpt_namer(args)
-        torch.save(
-            classifier.state_dict(), classifier_filepath,
-        )
+        torch.save(classifier.state_dict(), classifier_filepath)
 
         logger.info(f"Saved to {classifier_filepath}")
 
@@ -295,9 +283,7 @@ def main():
 
             autoencoder_filepath = autoencoder_ckpt_namer(args)
             if args.autoencoder_train_supervised:
-                torch.save(
-                    autoencoder.state_dict(), autoencoder_filepath,
-                )
+                torch.save(autoencoder.state_dict(), autoencoder_filepath)
 
             logger.info(f"Saved to {autoencoder_filepath}")
 

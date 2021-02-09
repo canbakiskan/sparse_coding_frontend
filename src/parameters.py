@@ -40,7 +40,7 @@ def get_arguments():
         "--dataset",
         type=str,
         default="CIFAR10",
-        choices=["CIFAR10", "Tiny-ImageNet", "Imagenette"],
+        choices=["CIFAR10", "Tiny-ImageNet", "Imagenette", "Imagenet"],
         help="Directory of experiments",
     )
 

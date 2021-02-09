@@ -9,7 +9,7 @@ from os import path
 from .utils.namers import dict_file_namer, dict_params_string
 from .utils.get_modules import get_dictionary
 from .parameters import get_arguments
-from .utils.read_datasets import cifar10, tiny_imagenet, imagenette
+from .utils.read_datasets import read_dataset
 import torch
 
 
@@ -102,16 +102,10 @@ def main():
 
     data_dir = args.directory + "data/"
 
-    if args.dataset == "CIFAR10":
-        train_loader, _ = cifar10(args)
-    elif args.dataset == "Tiny-ImageNet":
-        train_loader, _ = tiny_imagenet(args)
-    elif args.dataset == "Imagenette":
-        if not args.dict_online:
-            args.train_batch_size = 9469
-        train_loader, _ = imagenette(args)
-    else:
-        raise NotImplementedError
+    train_loader, _ = read_dataset(args)
+
+    if args.dataset == "Imagenette" and not args.dict_online:
+        args.train_batch_size = 9469
 
     dict_filepath = dict_file_namer(args)
     if path.exists(dict_filepath):
@@ -131,7 +125,11 @@ def main():
             t0 = time()
             for x_train, _ in train_loader:
                 train_patches = extract_patches(
-                    x_train, args.defense_patchshape, args.defense_stride, in_order="NCHW", out_order="NHWC"
+                    x_train,
+                    args.defense_patchshape,
+                    args.defense_stride,
+                    in_order="NCHW",
+                    out_order="NHWC",
                 )
                 train_patches = train_patches.reshape(
                     train_patches.shape[0], -1)
@@ -147,6 +145,7 @@ def main():
             elif args.dataset == "Imagenette":
 
                 from torchvision import transforms
+
                 transform_train = transforms.Compose(
                     [
                         transforms.RandomCrop((160)),
@@ -163,7 +162,11 @@ def main():
 
             print("Images shape: {}".format(x_train.shape))
             train_patches = extract_patches(
-                x_train, args.defense_patchshape, args.defense_stride, in_order="NHWC", out_order="NHWC"
+                x_train,
+                args.defense_patchshape,
+                args.defense_stride,
+                in_order="NHWC",
+                out_order="NHWC",
             )
             print("Patches shape: {}".format(train_patches.shape))
 
@@ -202,8 +205,7 @@ def main():
             plt.subplot(20, 20, i + 1)
             atom = atom.reshape(args.defense_patchshape)
             plt.imshow(
-                (atom - atom.min()) / (atom.max() - atom.min()),
-                interpolation="nearest",
+                (atom - atom.min()) / (atom.max() - atom.min()), interpolation="nearest"
             )
 
             # plt.axis("off")
