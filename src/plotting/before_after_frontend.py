@@ -6,21 +6,18 @@ import os
 import numpy as np
 import logging
 
-from .train_test_functions import (
+from ..train_test_functions import (
     train_autoencoder_unsupervised,
     test_autoencoder_unsupervised,
 )
-from .parameters import get_arguments
-from .utils.read_datasets import cifar10, tiny_imagenet, imagenette
-from .models.autoencoders import *
+from ..parameters import get_arguments
+from ..utils.read_datasets import read_dataset
+from ..models.autoencoders import *
 from tqdm import tqdm
-from .utils.namers import (
-    autoencoder_ckpt_namer,
-    autoencoder_log_namer,
-)
+from ..utils.namers import autoencoder_ckpt_namer, autoencoder_log_namer
 from torchvision import datasets, transforms
 import matplotlib.pyplot as plt
-from .utils.get_modules import get_autoencoder
+from ..utils.get_modules import get_autoencoder
 
 
 def main():
@@ -32,14 +29,7 @@ def main():
     x_min = 0.0
     x_max = 1.0
 
-    if args.dataset == "CIFAR10":
-        train_loader, test_loader = cifar10(args)
-    elif args.dataset == "Tiny-ImageNet":
-        train_loader, test_loader = tiny_imagenet(args)
-    elif args.dataset == "Imagenette":
-        train_loader, test_loader = imagenette(args)
-    else:
-        raise NotImplementedError
+    train_loader, test_loader = read_dataset(args)
 
     autoencoder = get_autoencoder(args)
     autoencoder.eval()
@@ -58,8 +48,7 @@ def main():
             plt.xticks([])
             plt.yticks([])
             plt.subplot(1, 2, 2)
-            plt.imshow(
-                reconstructions[img_index].detach().cpu().permute(1, 2, 0))
+            plt.imshow(reconstructions[img_index].detach().cpu().permute(1, 2, 0))
             plt.xticks([])
             plt.yticks([])
             plt.savefig(f"reconstructions_{batch_idx}.pdf")
