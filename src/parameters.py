@@ -562,6 +562,11 @@ def get_arguments():
         args.image_shape = (160, 160, 3)
         if args.defense_nbimgs == 0:
             args.defense_nbimgs = 3925
+    elif args.dataset == "Imagenet":
+        args.num_classes = 1000
+        args.image_shape = (224, 224, 3)
+        if args.defense_nbimgs == 0:
+            args.defense_nbimgs = 50000
     else:
         print(f"Dataset {args.dataset} is not currently available.")
         raise NotImplementedError

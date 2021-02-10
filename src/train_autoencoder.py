@@ -12,6 +12,7 @@ from .train_test_functions import (
 )
 from .parameters import get_arguments
 from .utils.read_datasets import read_dataset
+from .utils.get_optimizer_scheduler import get_optimizer_scheduler
 from .models.autoencoders import *
 from tqdm import tqdm
 from .utils.namers import autoencoder_ckpt_namer, autoencoder_log_namer
@@ -57,53 +58,8 @@ def main():
         autoencoder = torch.nn.DataParallel(autoencoder)
         cudnn.benchmark = True
 
-    if args.optimizer == "sgd":
-        optimizer = optim.SGD(
-            autoencoder.parameters(),
-            lr=args.lr,
-            momentum=args.momentum,
-            weight_decay=args.weight_decay,
-        )
-    elif args.optimizer == "rms":
-        optimizer = optim.RMSprop(
-            autoencoder.parameters(),
-            lr=args.lr,
-            weight_decay=args.weight_decay,
-            momentum=args.momentum,
-        )
-
-    elif args.optimizer == "adam":
-        optimizer = optim.Adam(
-            autoencoder.parameters(), lr=args.lr, weight_decay=args.weight_decay
-        )
-    else:
-        raise NotImplementedError
-
-    if args.lr_scheduler == "cyc":
-        lr_steps = args.classifier_epochs * len(train_loader)
-        scheduler = torch.optim.lr_scheduler.CyclicLR(
-            optimizer,
-            base_lr=args.lr_min,
-            max_lr=args.lr_max,
-            step_size_up=lr_steps / 2,
-            step_size_down=lr_steps / 2,
-        )
-    elif args.lr_scheduler == "step":
-        scheduler = torch.optim.lr_scheduler.MultiStepLR(
-            optimizer, milestones=[35], gamma=0.1
-        )
-
-    elif args.lr_scheduler == "mult":
-
-        def lr_fun(epoch):
-            if epoch % 3 == 0:
-                return 0.962
-            else:
-                return 1.0
-
-        scheduler = MultiplicativeLR(optimizer, lr_fun)
-    else:
-        raise NotImplementedError
+    optimizer, scheduler = get_optimizer_scheduler(
+        args, autoencoder, len(train_loader))
 
     with tqdm(
         total=args.autoencoder_epochs,
@@ -119,7 +75,8 @@ def main():
             train_loss = train_autoencoder_unsupervised(
                 autoencoder, train_loader, optimizer, scheduler
             )
-            validation_loss = test_autoencoder_unsupervised(autoencoder, test_loader)
+            validation_loss = test_autoencoder_unsupervised(
+                autoencoder, test_loader)
 
             logger.info(f"Epoch: {epoch}, Train Loss: {train_loss}")
             logger.info(f"Epoch: {epoch}, Validation Loss: {validation_loss}")

@@ -18,6 +18,7 @@ from .train_test_functions import train, test
 
 from .parameters import get_arguments
 from .utils.read_datasets import read_dataset
+from .utils.get_optimizer_scheduler import get_optimizer_scheduler
 
 from .utils.namers import (
     autoencoder_ckpt_namer,
@@ -129,54 +130,8 @@ def main():
 
     # Which optimizer to be used for training
 
-    if args.optimizer == "sgd":
-        optimizer = optim.SGD(
-            model.parameters(),
-            lr=args.lr,
-            momentum=args.momentum,
-            weight_decay=args.weight_decay,
-        )
-    elif args.optimizer == "rms":
-        optimizer = optim.RMSprop(
-            model.parameters(),
-            lr=args.lr,
-            weight_decay=args.weight_decay,
-            momentum=args.momentum,
-        )
-
-    elif args.optimizer == "adam":
-        optimizer = optim.Adam(
-            model.parameters(), lr=args.lr, weight_decay=args.weight_decay
-        )
-    else:
-        raise NotImplementedError
-
-    if args.lr_scheduler == "cyc":
-        lr_steps = args.classifier_epochs * len(train_loader)
-        scheduler = torch.optim.lr_scheduler.CyclicLR(
-            optimizer,
-            base_lr=args.lr_min,
-            max_lr=args.lr_max,
-            step_size_up=lr_steps / 2,
-            step_size_down=lr_steps / 2,
-        )
-    elif args.lr_scheduler == "step":
-        scheduler = torch.optim.lr_scheduler.MultiStepLR(
-            optimizer, milestones=[50, 80], gamma=0.1
-        )
-
-    elif args.lr_scheduler == "mult":
-
-        def lr_fun(epoch):
-            if epoch % 3 == 0:
-                return 0.962
-            else:
-                return 1.0
-
-        scheduler = torch.optim.lr_scheduler.MultiplicativeLR(
-            optimizer, lr_fun)
-    else:
-        raise NotImplementedError
+    optimizer, scheduler = get_optimizer_scheduler(
+        args, model, len(train_loader))
 
     if args.adv_training_attack:
 
