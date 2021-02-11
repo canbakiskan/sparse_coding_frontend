@@ -52,7 +52,7 @@ def get_arguments():
         "--classifier_arch",
         type=str,
         choices=["resnet", "resnetwide", "efficientnet",
-                 "preact_resnet", "dropout_resnet"],
+                 "preact_resnet", "dropout_resnet", "resnet_after_encoder"],
         default="resnet",
         metavar="classifier_name",
         help="Which classifier to use",

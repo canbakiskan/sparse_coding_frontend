@@ -112,7 +112,13 @@ class resize_decoder(nn.Module):
         return out.clamp(0.0, 1.0)
 
 
+class identity_decoder(nn.Module):
+    def forward(x):
+        return x
+
+
 decoder_dict = {"default_decoder": default_decoder,
                 "resize_decoder": resize_decoder,
                 "deep_decoder": deep_decoder,
-                "small_decoder": small_decoder}
+                "small_decoder": small_decoder,
+                "identity_decoder": identity_decoder}
