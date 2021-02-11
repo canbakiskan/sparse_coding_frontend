@@ -38,7 +38,7 @@ from deepillusion.torchattacks import (
     PGD_EOT_sign,
 )
 from deepillusion.torchdefenses import adversarial_epoch, adversarial_test
-from .models.autoencoders import *
+from .models.autoencoder import autoencoder_class
 import sys
 
 logger = logging.getLogger(__name__)
@@ -100,7 +100,7 @@ def main():
 
         if args.autoencoder_train_supervised:
 
-            autoencoder = autoencoder_dict[args.autoencoder_arch](
+            autoencoder = autoencoder_class(
                 args).to(device)
 
             for p in autoencoder.parameters():

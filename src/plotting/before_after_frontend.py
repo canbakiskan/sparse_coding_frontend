@@ -12,7 +12,6 @@ from ..train_test_functions import (
 )
 from ..parameters import get_arguments
 from ..utils.read_datasets import read_dataset
-from ..models.autoencoders import *
 from tqdm import tqdm
 from ..utils.namers import autoencoder_ckpt_namer, autoencoder_log_namer
 from torchvision import datasets, transforms
@@ -48,7 +47,8 @@ def main():
             plt.xticks([])
             plt.yticks([])
             plt.subplot(1, 2, 2)
-            plt.imshow(reconstructions[img_index].detach().cpu().permute(1, 2, 0))
+            plt.imshow(
+                reconstructions[img_index].detach().cpu().permute(1, 2, 0))
             plt.xticks([])
             plt.yticks([])
             plt.savefig(f"reconstructions_{batch_idx}.pdf")

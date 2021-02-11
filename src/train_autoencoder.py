@@ -13,7 +13,7 @@ from .train_test_functions import (
 from .parameters import get_arguments
 from .utils.read_datasets import read_dataset
 from .utils.get_optimizer_scheduler import get_optimizer_scheduler
-from .models.autoencoders import *
+from .models.autoencoder import autoencoder_class
 from tqdm import tqdm
 from .utils.namers import autoencoder_ckpt_namer, autoencoder_log_namer
 from torchvision import datasets, transforms
@@ -51,7 +51,7 @@ def main():
 
     train_loader, test_loader = read_dataset(args)
 
-    autoencoder = autoencoder_dict[args.autoencoder_arch](args).to(device)
+    autoencoder = autoencoder_class(args).to(device)
 
     if args.ablation_no_dictionary:
         autoencoder.dictionary_update_on()

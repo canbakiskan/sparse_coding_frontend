@@ -427,21 +427,9 @@ def get_arguments():
         "--autoencoder_arch",
         type=str,
         default="top_T_dropout_quant_autoencoder",
-        choices=[
-            "quant_autoencoder",
-            "top_T_autoencoder",
-            "top_T_noisy_autoencoder",
-            "top_T_quant_autoencoder",
-            "top_T_quant_noisy_autoencoder",
-            "top_T_dropout_autoencoder",
-            "top_T_dropout_quant_autoencoder",
-            "top_T_dropout_quant_small_autoencoder",
-            "top_T_dropout_quant_deep_autoencoder",
-            "top_T_dropout_quant_resize_autoencoder",
-            "top_T_quant_resize_autoencoder",
-            "sparse_autoencoder",
-            "gaussian_blur"
-        ],
+        choices=[(encoder_name + "_" + decoder_name + "_autoencoder").replace("__", "_") for encoder_name in [
+            "quant", "top_T", "top_T_noisy", "top_T_quant", "top_T_quant_noisy", "top_T_dropout", "top_T_dropout_quant"] for decoder_name in ["", "small", "deep", "resize", "identity"]]+["sparse_autoencoder",
+                                                                                                                                                                                           "gaussian_blur"],
         metavar="autoencoder_model",
         help="Autoencoder_model model name (default: top_T_dropout_quant_autoencoder)",
     )

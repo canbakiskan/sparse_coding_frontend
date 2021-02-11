@@ -6,7 +6,7 @@ from .namers import (
     autoencoder_ckpt_namer,
     classifier_ckpt_namer,
 )
-from ..models.autoencoders import *
+from ..models.autoencoder import autoencoder_class
 
 
 def get_classifier(args):
@@ -56,7 +56,7 @@ def get_autoencoder(args):
     use_cuda = not args.no_cuda and torch.cuda.is_available()
     device = torch.device("cuda" if use_cuda else "cpu")
 
-    autoencoder = autoencoder_dict[args.autoencoder_arch](args).to(device)
+    autoencoder = autoencoder_class(args).to(device)
 
     if args.autoencoder_arch != "gaussian_blur":
         try:
