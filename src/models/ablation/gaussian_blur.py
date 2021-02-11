@@ -43,7 +43,7 @@ class gaussian_blur(nn.Module):
     def forward(self, input):
         return self.gaussian_filter(self.padding(input))
 
-    def encoder_no_update(self):
+    def dictionary_update_off(self):
         pass
 
     def set_BPDA_type(self, x):

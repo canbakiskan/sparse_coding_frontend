@@ -389,6 +389,13 @@ def get_arguments():
         help="Sigma for the gaussian blur in ablation study",
     )
 
+    others.add_argument(
+        "--ablation_no_dictionary",
+        action="store_true",
+        default=False,
+        help="first layer of autoencoder is also trained, no fixed dictionary is used",
+    )
+
     # Defense
     defense = parser.add_argument_group("defense", "Defense arguments")
 

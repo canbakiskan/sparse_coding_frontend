@@ -52,6 +52,12 @@ def main():
     train_loader, test_loader = read_dataset(args)
 
     autoencoder = autoencoder_dict[args.autoencoder_arch](args).to(device)
+
+    if args.ablation_no_dictionary:
+        autoencoder.dictionary_update_on()
+    else:
+        autoencoder.dictionary_update_off()
+
     autoencoder.train()
 
     if device == "cuda":

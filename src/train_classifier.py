@@ -106,7 +106,10 @@ def main():
             for p in autoencoder.parameters():
                 p.requires_grad = True
 
-            autoencoder.encoder_no_update()
+            if args.ablation_no_dictionary:
+                autoencoder.dictionary_update_on()
+            else:
+                autoencoder.dictionary_update_off()
 
         else:
             autoencoder = get_autoencoder(args)

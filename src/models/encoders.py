@@ -38,6 +38,7 @@ class encoder_base_class(nn.Module):
             padding=0,
             bias=False,
         )
+        if not args.ablation_no_dictionary:
         self.conv.weight.data = (
             dictionary.t()
             .reshape(
@@ -54,6 +55,8 @@ class encoder_base_class(nn.Module):
             return super(encoder_base_class, self).__getattr__(key)
 
     def forward(self, x):
+        if self.conv.weight.requires_grad:
+            self.update_l1_norms()
         return self.conv(x)
 
     def set_jump(self, jump):
@@ -77,6 +80,10 @@ class encoder_base_class(nn.Module):
                         dictionary, dtype=torch.float).abs().sum(dim=0)
                 )
             self.l1_norms.requires_grad = False
+
+    def update_l1_norms(self):
+        # for cases where the dictionary changes, we need to update l1 norms
+        self.l1_norms.data = self.conv.weight.data.abs().sum(dim=(1, 2, 3))
 
 
 class stochastic():

@@ -42,7 +42,7 @@ class sparse_autoencoder(nn.Module):
         out = take_middle_of_img(out, self.image_size)
         return out.clamp(0.0, 1.0)
 
-    def encoder_no_update(self):
+    def dictionary_update_off(self):
         pass
 
     def set_BPDA_type(self, x):

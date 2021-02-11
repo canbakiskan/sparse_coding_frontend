@@ -36,9 +36,13 @@ class autoencoder_base_class(nn.Module):
     def forward(self, x):
         return self.decoder(self.encoder(x))
 
-    def encoder_no_update(self):
+    def dictionary_update_off(self):
         for p in self.encoder.parameters():
             p.requires_grad = False
+
+    def dictionary_update_on(self):
+        self.dictionary_update_off()
+        self.encoder.conv.weight.requires_grad = True
 
 
 class quant_autoencoder(autoencoder_base_class):
