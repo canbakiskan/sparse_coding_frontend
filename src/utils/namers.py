@@ -5,24 +5,28 @@ import numpy as np
 
 def dict_params_string(args):
 
-    if args.dict_type == "dct":
-        dictionary_parameters_string = f"_dct_ps_{args.defense_patchsize}"
+    if args.ablation_no_dictionary:
+        dictionary_parameters_string = "_nodict"
 
-    elif args.dict_type == "overcomplete":
+    else:
+        if args.dict_type == "dct":
+            dictionary_parameters_string = f"_dct_ps_{args.defense_patchsize}"
 
-        dictionary_parameters = {
-            "ps": args.defense_patchsize,
-            "st": args.defense_stride,
-            "l": args.dict_lambda,
-            "n": args.dict_nbatoms,
-            "it": args.dict_iter,
-        }
+        elif args.dict_type == "overcomplete":
 
-        dictionary_parameters_string = ""
-        for key in dictionary_parameters:
-            dictionary_parameters_string += (
-                "_" + str(key) + "_" + str(dictionary_parameters[key])
-            )
+            dictionary_parameters = {
+                "ps": args.defense_patchsize,
+                "st": args.defense_stride,
+                "l": args.dict_lambda,
+                "n": args.dict_nbatoms,
+                "it": args.dict_iter,
+            }
+
+            dictionary_parameters_string = ""
+            for key in dictionary_parameters:
+                dictionary_parameters_string += (
+                    "_" + str(key) + "_" + str(dictionary_parameters[key])
+                )
 
     return dictionary_parameters_string[1:]
 
