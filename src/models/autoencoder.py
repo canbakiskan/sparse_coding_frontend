@@ -15,14 +15,15 @@ class autoencoder_class(nn.Module):
 
         for decoder_name in ["small", "deep", "resize", "identity"]:
             if decoder_name in arch_name:
-                decoder_class = decoder_name+"_decoder"
-                encoder_class = arch_name.replace("_"+decoder_name)
+                decoder_class = decoder_name + "_decoder"
+                encoder_class = arch_name.replace(
+                    "_" + decoder_name, "") + "_encoder"
                 decoder_name = ""
                 break
 
         if decoder_name != "":
             decoder_class = "default_decoder"
-            encoder_class = arch_name
+            encoder_class = arch_name + "_encoder"
 
         self.encoder = encoder_dict[encoder_class](args)
         self.decoder = decoder_dict[decoder_class](args)
