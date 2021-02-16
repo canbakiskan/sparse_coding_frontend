@@ -213,7 +213,6 @@ class top_T_quant_noisy_encoder(top_T_quant_encoder, noisy):
     def __init__(self, args, BPDA_type="maxpool_like"):
         super(top_T_quant_noisy_encoder, self).__init__(args, BPDA_type)
         noisy.__init__(self, args)
-        self.gamma = args.noise_gamma
 
     def forward(self, x):
         x = encoder_base_class.forward(self, x)
