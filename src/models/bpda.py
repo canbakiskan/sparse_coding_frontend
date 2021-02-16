@@ -88,7 +88,7 @@ class one_module_BPDA_gaussianblur(torch.autograd.Function):
     def backward(ctx, grad_outputs):
 
         # prev = torch.is_grad_enabled()
-        torch._C.set_grad_enabled(True)
+        torch.set_grad_enabled(True)
 
         args = SimpleNamespace()
         args.ablation_blur_sigma = one_module_BPDA_gaussianblur.blur_sigma
@@ -152,13 +152,13 @@ class activation_quantization_BPDA_identity(torch.autograd.Function):
     def forward(ctx, x, l1_norms, jump):
         # x.shape: batchsize,nb_atoms,L,L
 
-        result = x / l1_norms.view(1, -1, 1, 1)
+        x = x / l1_norms.view(1, -1, 1, 1)
 
-        result = 0.5 * (torch.sign(result - jump) + torch.sign(result + jump))
+        x = 0.5 * (torch.sign(x - jump) + torch.sign(x + jump))
 
-        result = result * l1_norms.view(1, -1, 1, 1)
+        x = x * l1_norms.view(1, -1, 1, 1)
 
-        return result
+        return x
 
     @staticmethod
     def backward(ctx, grad_output):
