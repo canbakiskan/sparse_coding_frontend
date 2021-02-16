@@ -465,8 +465,8 @@ def get_arguments():
     defense.add_argument(
         "--test_noise_gamma",
         type=float,
-        default=100.0,
-        metavar="train_noise_gamma",
+        default=0.0,
+        metavar="test_noise_gamma",
         help="coefficient in front of l1 scaled noise times epsilon (default: 1.0)",
     )
 
