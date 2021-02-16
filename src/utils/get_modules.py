@@ -35,6 +35,11 @@ def get_classifier(args):
         from ..models.ablation.dropout_resnet import dropout_ResNet
         classifier = dropout_ResNet(
             dropout_p=args.dropout_p, nb_filters=args.dict_nbatoms, num_outputs=args.num_classes).to(device)
+    elif args.classifier_arch == "resnet_after_encoder":
+        from ..models.ablation.resnet_after_encoder import ResNet_after_encoder
+        classifier = ResNet_after_encoder(
+            nb_filters=args.dict_nbatoms, num_outputs=args.num_classes).to(device)
+
     else:
         raise NotImplementedError
 

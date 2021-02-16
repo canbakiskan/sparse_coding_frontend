@@ -4,7 +4,7 @@ import torch.nn.functional as F
 
 
 class ResNet_after_encoder(ResNet):
-    def __init__(self,  dropout_p, nb_filters, num_outputs=10):
+    def __init__(self, nb_filters, num_outputs=10):
         super(ResNet_after_encoder, self).__init__(num_outputs)
 
         filters = [16, 16, 32, 64]
@@ -17,6 +17,11 @@ class ResNet_after_encoder(ResNet):
 
         out = self.conv1(x)
         out = self.block1(out)
+
+        # odd pixel size causes issues with skip connection adding, pad one side
+        pad = nn.ZeroPad2d((0, 1, 0, 1))
+        out = pad(out)
+
         out = self.block2(out)
         out = self.block3(out)
         out = F.leaky_relu(self.bn1(out), 0.1)

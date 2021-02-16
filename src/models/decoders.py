@@ -113,7 +113,10 @@ class resize_decoder(nn.Module):
 
 
 class identity_decoder(nn.Module):
-    def forward(x):
+    def __init__(self, args):
+        super(identity_decoder, self).__init__()
+
+    def forward(self, x):
         return x
 
 

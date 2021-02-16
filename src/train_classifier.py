@@ -13,6 +13,7 @@ from .models.resnet import ResNet, ResNetWide
 from .models.efficientnet import EfficientNet
 from .models.preact_resnet import PreActResNet101
 from .models.ablation.dropout_resnet import dropout_ResNet
+from .models.ablation.resnet_after_encoder import ResNet_after_encoder
 
 from .train_test_functions import train, test
 
@@ -93,6 +94,9 @@ def main():
             nb_filters=args.dict_nbatoms,
             num_outputs=args.num_classes,
         ).to(device)
+    elif args.classifier_arch == "resnet_after_encoder":
+        classifier = ResNet_after_encoder(
+            nb_filters=args.dict_nbatoms, num_outputs=args.num_classes).to(device)
     else:
         raise NotImplementedError
 

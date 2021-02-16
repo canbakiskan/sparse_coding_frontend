@@ -27,8 +27,6 @@ class encoder_base_class(nn.Module):
 
         from ..utils.get_modules import get_dictionary
 
-        dictionary = get_dictionary(args)
-        self.set_l1_norms(dictionary)
         self.set_jump(args.activation_beta * args.defense_epsilon)
         self.conv = nn.Conv2d(
             3,
@@ -39,6 +37,7 @@ class encoder_base_class(nn.Module):
             bias=False,
         )
         if not args.ablation_no_dictionary:
+            dictionary = get_dictionary(args)
         self.conv.weight.data = (
             dictionary.t()
             .reshape(
@@ -47,6 +46,9 @@ class encoder_base_class(nn.Module):
             .permute(0, 3, 1, 2)
         )
         self.conv.weight.requires_grad = False
+
+        self.set_l1_norms(self.conv.weight.data.permute(
+            0, 2, 3, 1).reshape(args.dict_nbatoms, -1).t())
 
     def __getattr__(self, key):
         if key == "dictionary":
@@ -103,7 +105,7 @@ class quant_encoder(encoder_base_class):
                 args.attack_quantization_BPDA_steepness).apply
 
     def forward(self, x):
-        super(quant_encoder, self).forward(x)
+        x = super(quant_encoder, self).forward(x)
         x = self.activation(x, self.l1_norms, self.jump)
         return x
 
@@ -170,7 +172,7 @@ class top_T_quant_encoder(encoder_base_class):
         super(top_T_quant_encoder, self).__init__(args)
 
         self.T = args.top_T
-        if args.attack_quantization_BPDA_steepness == -1.0:
+        if args.attack_quantization_BPDA_steepness == 0.0:
             from .bpda import activation_quantization_BPDA_identity
             self.activation = activation_quantization_BPDA_identity().apply
         else:
