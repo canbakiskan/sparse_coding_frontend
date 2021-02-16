@@ -144,9 +144,15 @@ def main():
         else:
             if (
                 args.attack_box_type == "white"
-                and args.attack_whitebox_type == "dropout_identity"
+                and args.attack_whitebox_type == "top_T_dropout_identity"
             ):
                 autoencoder.set_BPDA_type("identity")
+
+            elif (
+                args.attack_box_type == "white"
+                and args.attack_whitebox_type == "top_T_top_U"
+            ):
+                autoencoder.set_BPDA_type("top_U")
 
             elif (
                 args.attack_box_type == "white"
