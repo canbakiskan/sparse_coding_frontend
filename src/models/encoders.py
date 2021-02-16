@@ -139,13 +139,20 @@ class top_T_encoder(encoder_base_class):
 
 class noisy():
     def __init__(self, args):
-        self.noise_level = args.defense_epsilon*args.noise_gamma
+        self.train_noise_level = args.defense_epsilon*args.train_noise_gamma
+        self.test_noise_level = args.defense_epsilon*args.test_noise_gamma
 
     def add_noise(self, x):
         noise = torch.rand_like(x)
         noise = noise / torch.norm(noise, p=1, dim=(2, 3)
                                    ).unsqueeze(-1).unsqueeze(-1)
-        noise = noise * self.noise_level * self.l1_norms.view(1, -1, 1, 1)
+
+        if self.train:
+            noise = noise * self.train_noise_level * \
+                self.l1_norms.view(1, -1, 1, 1)
+        elif self.eval:
+            noise = noise * self.test_noise_level * \
+                self.l1_norms.view(1, -1, 1, 1)
 
         return x+noise
 
@@ -154,7 +161,6 @@ class top_T_noisy_encoder(top_T_encoder, noisy):
     def __init__(self, args, BPDA_type="maxpool_like"):
         super(top_T_noisy_encoder, self).__init__(args, BPDA_type)
         noisy.__init__(self, args)
-        self.gamma = args.noise_gamma
 
     def forward(self, x):
         x = encoder_base_class.forward(self, x)

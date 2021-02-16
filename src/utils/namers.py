@@ -61,7 +61,7 @@ def autoencoder_params_string(args):
         autoencoder_params_string += f"_s_{args.ablation_blur_sigma:.2f}"
 
     if "noisy" in args.autoencoder_arch:
-        autoencoder_params_string += f"_g_{args.noise_gamma:.2f}"
+        autoencoder_params_string += f"_g_{args.train_noise_gamma:.2f}"
 
     if args.autoencoder_train_supervised:
         autoencoder_params_string += "_S"
