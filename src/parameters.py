@@ -323,7 +323,7 @@ def get_arguments():
         "-at_ni",
         "--attack_num_steps",
         type=int,
-        default=20,
+        default=40,
         metavar="",
         help="Number of steps for PGD",
     )
@@ -338,7 +338,7 @@ def get_arguments():
         "-at_nr",
         "--attack_num_restarts",
         type=int,
-        default=1,
+        default=10,
         metavar="",
         help="number of restarts for PGD",
     )
