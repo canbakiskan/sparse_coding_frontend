@@ -147,10 +147,10 @@ class noisy():
         noise = noise / torch.norm(noise, p=1, dim=(2, 3)
                                    ).unsqueeze(-1).unsqueeze(-1)
 
-        if self.train:
+        if self.training:
             noise = noise * self.train_noise_level * \
                 self.l1_norms.view(1, -1, 1, 1)
-        elif self.eval:
+        else:
             noise = noise * self.test_noise_level * \
                 self.l1_norms.view(1, -1, 1, 1)
 
