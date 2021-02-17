@@ -247,7 +247,8 @@ def get_arguments():
         "--attack_whitebox_type",
         type=str,
         default="W-AIGA",
-        choices=["SW", "W-NFGA", "W-AIGA", "W-AGGA"],
+        choices=["SW", "W-NFGA", "W-AIGA", "W-AGGA",
+                 "top_T_dropout_identity", "top_T_top_U"],
         metavar="",
         help="whitebox attack type",
     )
