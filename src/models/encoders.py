@@ -216,12 +216,18 @@ class top_T_quant_noisy_encoder(top_T_quant_encoder, noisy):
 
     def forward(self, x):
         x = encoder_base_class.forward(self, x)
+        # x_noiseless = x
         x = self.add_noise(x)
 
+        # print((torch.norm(x.abs(), p=1, dim=(2, 3)) /
+        #        torch.norm((x_noiseless-x).abs(), p=1, dim=(2, 3))).mean().item())
         if self.BPDA_type == "top_U":
             x = self.take_top_T(x, self.T, 2*self.T)
         else:
+            # x_noiseless = self.take_top_T(x_noiseless, self.T)
             x = self.take_top_T(x, self.T)
+        # print(torch.true_divide((x_noiseless != x).sum(),
+        #                         (2*x.shape[0]*x.shape[2]*x.shape[3])).item())
         x = self.activation(x, self.l1_norms, self.jump)
         return x
 
