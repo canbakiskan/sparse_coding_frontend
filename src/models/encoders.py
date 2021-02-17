@@ -38,14 +38,14 @@ class encoder_base_class(nn.Module):
         )
         if not args.ablation_no_dictionary:
             dictionary = get_dictionary(args)
-        self.conv.weight.data = (
-            dictionary.t()
-            .reshape(
-                args.dict_nbatoms, args.defense_patchsize, args.defense_patchsize, 3
+            self.conv.weight.data = (
+                dictionary.t()
+                .reshape(
+                    args.dict_nbatoms, args.defense_patchsize, args.defense_patchsize, 3
+                )
+                .permute(0, 3, 1, 2)
             )
-            .permute(0, 3, 1, 2)
-        )
-        self.conv.weight.requires_grad = False
+            self.conv.weight.requires_grad = False
 
         self.set_l1_norms(self.conv.weight.data.permute(
             0, 2, 3, 1).reshape(args.dict_nbatoms, -1).t())
