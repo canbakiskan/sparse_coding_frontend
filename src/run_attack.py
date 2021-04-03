@@ -21,6 +21,7 @@ from deepillusion.torchattacks import (
     RFGSM,
     PGD_EOT_normalized,
     PGD_EOT_sign,
+    PGD_smooth,
 )
 from .utils.read_datasets import(
     cifar10,
@@ -199,6 +200,7 @@ def main():
     attacks = dict(
         PGD=PGD,
         PGD_EOT=PGD_EOT,
+        PGD_smooth=PGD_smooth,
         PGD_EOT_normalized=PGD_EOT_normalized,
         PGD_EOT_sign=PGD_EOT_sign,
         FGSM=FGSM,

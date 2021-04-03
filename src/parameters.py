@@ -276,6 +276,7 @@ def get_arguments():
         default="PGD_EOT_normalized",
         choices=[
             "PGD_EOT",
+            "PGD_smooth",
             "FGSM",
             "RFGSM",
             "PGD",
