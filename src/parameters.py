@@ -404,6 +404,13 @@ def get_arguments():
         help="first layer of autoencoder is also trained, no fixed dictionary is used",
     )
 
+    others.add_argument(
+        "--distill",
+        action="store_true",
+        default=False,
+        help="whether to use distilled model in run_attack",
+    )
+
     # Defense
     defense = parser.add_argument_group("defense", "Defense arguments")
 

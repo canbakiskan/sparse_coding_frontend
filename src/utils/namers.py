@@ -225,6 +225,8 @@ def attack_file_namer(args):
 
     file_path += attack_params_string(args)
     file_path += "_"
+    if args.distill:
+        file_path += "distill_"
     file_path += classifier_params_string(args)
 
     file_path += ".npy"
@@ -238,8 +240,22 @@ def attack_log_namer(args):
 
     file_path += attack_params_string(args)
     file_path += "_"
+    if args.distill:
+        file_path += "distill_"
     file_path += classifier_params_string(args)
 
     file_path += ".log"
+
+    return file_path
+
+
+def distillation_ckpt_namer(args):
+
+    file_path = args.directory + f"checkpoints/classifiers/{args.dataset}/"
+
+    file_path += "distill_"
+    file_path += classifier_params_string(args)
+
+    file_path += ".npy"
 
     return file_path
