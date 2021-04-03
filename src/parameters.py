@@ -550,6 +550,11 @@ def get_arguments():
 
     args = parser.parse_args()
 
+    if args.attack_norm != 'inf':
+        args.attack_norm = int(args.attack_norm)
+    if args.adv_training_norm != 'inf':
+        args.adv_training_norm = int(args.adv_training_norm)
+
     if args.dataset == "CIFAR10":
         args.num_classes = 10
         args.image_shape = (32, 32, 3)

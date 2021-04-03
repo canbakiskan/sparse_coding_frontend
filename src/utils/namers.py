@@ -76,6 +76,10 @@ def autoencoder_params_string(args):
 def adv_training_params_string(args):
     adv_training_params_string = ""
     if args.adv_training_attack:
+
+        if args.adv_training_norm != 'inf':
+            attack_params_string += f"_L{args.adv_training_norm}"
+
         adv_training_params_string += f"_{args.adv_training_attack}"
         adv_training_params_string += (
             f"_eps_{np.int(np.round(args.adv_training_epsilon*255))}"
@@ -135,8 +139,14 @@ def attack_params_string(args):
     elif args.attack_box_type == "white":
         if not args.no_autoencoder:
             attack_params_string += f"_{args.attack_whitebox_type}"
+
+        if args.attack_norm != 'inf':
+            attack_params_string += f"_L{args.attack_norm}"
+
         attack_params_string += f"_{args.attack_method}"
+
         attack_params_string += f"_eps_{np.int(np.round(args.attack_epsilon*255))}"
+
         if "EOT" in args.attack_method:
             attack_params_string += f"_Ne_{args.attack_EOT_size}"
         if "PGD" in args.attack_method or "CW" in args.attack_method:
