@@ -116,6 +116,7 @@ class top_T_encoder(encoder_base_class):
 
         self.T = args.top_T
         self.set_BPDA_type(BPDA_type)
+        self.U = args.top_U
 
     def set_BPDA_type(self, BPDA_type):
         self.BPDA_type = BPDA_type
@@ -131,7 +132,7 @@ class top_T_encoder(encoder_base_class):
     def forward(self, x):
         x = super(top_T_encoder, self).forward(x)
         if self.BPDA_type == "top_U":
-            x = self.take_top_T(x, self.T,  2*self.T)
+            x = self.take_top_T(x, self.T,  self.U)
         else:
             x = self.take_top_T(x, self.T)
         return x
@@ -167,7 +168,7 @@ class top_T_noisy_encoder(top_T_encoder, noisy):
         x = self.add_noise(x)
 
         if self.BPDA_type == "top_U":
-            x = self.take_top_T(x, self.T,  2*self.T)
+            x = self.take_top_T(x, self.T, self.U)
         else:
             x = self.take_top_T(x, self.T)
         return x
@@ -187,6 +188,7 @@ class top_T_quant_encoder(encoder_base_class):
                 args.attack_quantization_BPDA_steepness).apply
 
         self.set_BPDA_type(BPDA_type)
+        self.U = args.top_U
 
     def set_BPDA_type(self, BPDA_type):
         self.BPDA_type = BPDA_type
@@ -202,7 +204,7 @@ class top_T_quant_encoder(encoder_base_class):
     def forward(self, x):
         x = super(top_T_quant_encoder, self).forward(x)
         if self.BPDA_type == "top_U":
-            x = self.take_top_T(x, self.T, 2*self.T)
+            x = self.take_top_T(x, self.T, self.U)
         else:
             x = self.take_top_T(x, self.T)
         x = self.activation(x, self.l1_norms, self.jump)
@@ -222,7 +224,7 @@ class top_T_quant_noisy_encoder(top_T_quant_encoder, noisy):
         # print((torch.norm(x.abs(), p=1, dim=(2, 3)) /
         #        torch.norm((x_noiseless-x).abs(), p=1, dim=(2, 3))).mean().item())
         if self.BPDA_type == "top_U":
-            x = self.take_top_T(x, self.T, 2*self.T)
+            x = self.take_top_T(x, self.T, self.U)
         else:
             # x_noiseless = self.take_top_T(x_noiseless, self.T)
             x = self.take_top_T(x, self.T)
@@ -238,6 +240,7 @@ class top_T_dropout_encoder(encoder_base_class, stochastic):
         self.T = args.top_T
         self.p = args.dropout_p
         self.set_BPDA_type(BPDA_type)
+        self.U = args.top_U
         self.fixed_seed = False
 
     def set_BPDA_type(self, BPDA_type):
@@ -275,6 +278,7 @@ class top_T_dropout_quant_encoder(encoder_base_class, stochastic):
                 args.attack_quantization_BPDA_steepness).apply
 
         self.set_BPDA_type(BPDA_type)
+        self.U = args.top_U
         self.fixed_seed = False
 
     def set_BPDA_type(self, BPDA_type):

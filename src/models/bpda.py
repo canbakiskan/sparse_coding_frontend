@@ -18,13 +18,13 @@ class take_top_T_dropout_BPDA_identity(torch.autograd.Function):
 class take_top_T_dropout_BPDA_top_U(torch.autograd.Function):
     @staticmethod
     def forward(ctx, x, T, p, U):
-        ctx.save_for_backward(take_top_T(x, U * T)*x)
+        ctx.save_for_backward(take_top_T(x, U))
         return take_top_T_dropout(x, T, p)
 
     @staticmethod
     def backward(ctx, grad_output):
         top_U, = ctx.saved_tensors
-        return grad_output*top_U.sign(), None, None, None
+        return grad_output*top_U.sign().abs(), None, None, None
 
 
 class take_top_T_BPDA_identity(torch.autograd.Function):
@@ -40,13 +40,13 @@ class take_top_T_BPDA_identity(torch.autograd.Function):
 class take_top_T_BPDA_top_U(torch.autograd.Function):
     @staticmethod
     def forward(ctx, x, T, U):
-        ctx.save_for_backward(take_top_T(x, U * T)*x)
+        ctx.save_for_backward(take_top_T(x, U))
         return take_top_T(x, T)
 
     @staticmethod
     def backward(ctx, grad_output):
         top_U, = ctx.saved_tensors
-        return grad_output*top_U.sign(), None, None
+        return grad_output*top_U.sign().abs(), None, None
 
 
 class dropout_BPDA_identity(torch.autograd.Function):

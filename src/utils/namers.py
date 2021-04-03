@@ -159,6 +159,8 @@ def attack_params_string(args):
             attack_params_string += f"_sig_{args.ablation_blur_sigma:.2f}"
         if args.attack_whitebox_type == "W-NFGA" and args.attack_quantization_BPDA_steepness != 0.0:
             attack_params_string += f"_steep_{args.attack_quantization_BPDA_steepness:.1f}"
+        if args.attack_whitebox_type == "top_T_top_U":
+            attack_params_string += f"_U_{args.top_U}"
 
     return attack_params_string
 

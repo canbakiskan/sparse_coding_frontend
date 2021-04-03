@@ -364,6 +364,13 @@ def get_arguments():
         metavar="",
         help="Steepness of backward pass approximation to activation&quantization function. 0.0 means identity. (default: 0.0)",
     )
+    adv_testing.add_argument(
+        "--top_U",
+        type=int,
+        default=2,
+        metavar="top_U",
+        help="How many top coefficients to back propagate through",
+    )
 
     # Others
     others = parser.add_argument_group("others", "Other arguments")
