@@ -98,14 +98,30 @@ def main():
     else:
         raise NotImplementedError
 
+    data_params = {"x_min": 0.0, "x_max": 1.0}
+
+    attack_params = {
+        "norm": args.attack_norm,
+        "eps": args.attack_epsilon,
+        "alpha": args.attack_alpha,
+        "step_size": args.attack_step_size,
+        "num_steps": args.attack_num_steps,
+        "random_start": (args.adv_training_rand and args.adv_training_num_restarts > 1),
+        "num_restarts": args.attack_num_restarts,
+        "EOT_size": args.attack_EOT_size,
+    }
+
     loss_landscape(
         ensemble_model,
         test_loader,
+        data_params,
+        attack_params,
         img_index=0,
         second_direction='random',
-        fig_name='loss_landscape.eps',
+        fig_name='confidence_top10_step0.5_avg100_bigger.pdf',
         norm='inf',
-        z_axis_type='loss',
+        avg_points=100,
+        z_axis_type='confidence',
         verbose=False,
     )
 
