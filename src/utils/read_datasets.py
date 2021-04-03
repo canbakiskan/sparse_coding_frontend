@@ -55,10 +55,8 @@ def tiny_imagenet_from_file(args):
             + args.attack_transfer_file
         )
 
-    elif args.attack_box_type == "white":
-        filepath = attack_file_namer(args)
     else:
-        raise AssertionError
+        filepath = attack_file_namer(args)
 
     test_images = np.load(filepath)
 
@@ -167,10 +165,8 @@ def imagenette_from_file(args):
             + args.attack_transfer_file
         )
 
-    elif args.attack_box_type == "white":
-        filepath = attack_file_namer(args)
     else:
-        raise AssertionError
+        filepath = attack_file_namer(args)
 
     test_images = np.load(filepath)
 
@@ -282,10 +278,8 @@ def cifar10_from_file(args):
             + args.attack_transfer_file
         )
 
-    elif args.attack_box_type == "white":
-        filepath = attack_file_namer(args)
     else:
-        raise AssertionError
+        filepath = attack_file_namer(args)
 
     test_images = np.load(filepath)
 
