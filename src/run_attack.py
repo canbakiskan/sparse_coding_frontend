@@ -298,8 +298,9 @@ def main():
         closest_images = torch.tensor(
             test_loader.dataset.data[closest_adv_idx]/255, dtype=torch.float32).permute(0, 3, 1, 2)
 
+    correct_sofar = 0
     for batch_idx, items in enumerate(
-        tqdm(loaders, desc="Attack progress", leave=False)
+        pbar := tqdm(loaders, desc="Attack progress", leave=False)
     ):
         if args.defense_nbimgs < (batch_idx + 1) * args.test_batch_size:
             break
@@ -326,11 +327,24 @@ def main():
                 ] = data.detach().cpu()
 
         with torch.no_grad():
+            out = ensemble_model(data).detach()
             attack_output[
                 batch_idx
                 * args.test_batch_size: (batch_idx + 1)
                 * args.test_batch_size,
-            ] = (ensemble_model(data).detach().cpu())
+            ] = out.cpu()
+
+            batch_pred = out.argmax(dim=1, keepdim=True)
+
+            batch_correct = batch_pred.eq(
+                target.view_as(batch_pred)).sum().item()
+            correct_sofar += batch_correct
+            accuracy_sofar = correct_sofar / \
+                ((batch_idx+1) * args.test_batch_size)
+
+        pbar.set_postfix(
+            Adv_ac=f"{accuracy_sofar:.4f}", refresh=True,
+        )
 
     end = time.time()
     logger.info(f"Attack computation time: {(end-start):.2f} seconds")
