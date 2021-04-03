@@ -96,7 +96,8 @@ class ResNet(nn.Module):
         out = self.block2(out)
         out = self.block3(out)
         out = F.leaky_relu(self.bn1(out), 0.1)
-        out = F.avg_pool2d(out, out.size(-1)).squeeze()
+        out = F.avg_pool2d(out, out.size(-1))
+        out = out.view(out.size(0), -1)
         out = self.linear(out)
 
         return out
