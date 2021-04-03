@@ -6,11 +6,8 @@ import os
 
 args = get_arguments()
 
-if not os.path.exists(args.directory + f'data/image_distances/{args.dataset}'):
-    os.makedirs(args.directory +
-                f'data/image_distances/{args.dataset}', exist_ok=True)
 
-if not os.path.exists(args.directory + f'data/image_distances/{args.dataset}/distances.npy'):
+if not os.path.exists(args.directory + f'data/image_distances/{args.dataset}/closest_img_indices.npy'):
 
     if args.dataset == "CIFAR10":
         _, test_loader = cifar10(args)
@@ -35,9 +32,15 @@ if not os.path.exists(args.directory + f'data/image_distances/{args.dataset}/dis
 
     l2dist = l2dist+l2dist.T
 
+    img_distances_idx = np.argsort(l2dist).astype(np.uint16)
+
+    if not os.path.exists(args.directory + f'data/image_distances/{args.dataset}'):
+        os.makedirs(args.directory +
+                    f'data/image_distances/{args.dataset}', exist_ok=True)
+
     np.save(
-        f'./data/image_distances/{args.dataset}/distances.npy', l2dist)
+        f'./data/image_distances/{args.dataset}/closest_img_indices.npy', img_distances_idx[:, :1000])
 
 else:
     print(
-        f'./data/image_distances/{args.dataset}/distances.npy already exists.')
+        f'./data/image_distances/{args.dataset}/closest_img_indices.npy already exists.')

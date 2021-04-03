@@ -274,9 +274,8 @@ def main():
     start = time.time()
 
     if args.attack_box_type == "other" and (args.otherbox_type == "boundary" or args.otherbox_type == "hopskip"):
-        img_distances = np.load(
-            f'./data/image_distances/{args.dataset}/distances.npy')
-        img_distances_idx = np.argsort(img_distances)
+        img_distances_idx = np.load(
+            f'./data/image_distances/{args.dataset}/closest_img_indices.npy')
         preds = torch.zeros(10000, dtype=torch.int)
 
         for batch_idx, items in enumerate(loaders):
