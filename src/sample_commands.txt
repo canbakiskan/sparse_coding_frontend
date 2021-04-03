@@ -1,0 +1,7 @@
+python -m NID_main.src.run_attack --classifier_epochs=76 --lr=0.01 --lr_scheduler=step --no_autoencoder --attack_method=PGD  --attack_norm=2 --attack_epsilon=0.6 --attack_step_size=0.075 --adv_training_attack=TRADES --attack_num_restarts=100;
+python -m NID_main.src.run_attack --classifier_epochs=100 --no_autoencoder --attack_method=PGD  --attack_norm=2 --attack_epsilon=0.6 --attack_step_size=0.075 --adv_training_attack=PGD --attack_num_restarts=100;
+python -m NID_main.src.run_attack --classifier_epochs=76 --lr=0.01 --lr_scheduler=step --no_autoencoder --attack_method=PGD  --attack_norm=1 --attack_epsilon=30 --attack_step_size=3.75 --adv_training_attack=TRADES --attack_num_restarts=100;
+python -m NID_main.src.run_attack --classifier_epochs=100 --no_autoencoder --attack_method=PGD  --attack_norm=1 --attack_epsilon=30 --attack_step_size=3.75 --adv_training_attack=PGD --attack_num_restarts=100;
+
+python -m NID_main.src.run_attack --autoencoder_train_supervised --autoencoder_arch=top_T_quant_autoencoder --top_T=15  --lr_max=0.02 --attack_whitebox_type=top_T_top_U --top_U=30 --attack_method=PGD  --attack_norm=2 --attack_epsilon=0.6 --attack_step_size=0.075 --attack_num_restarts=100
+python -m NID_main.src.run_attack --autoencoder_train_supervised --autoencoder_arch=top_T_quant_autoencoder --top_T=15  --lr_max=0.02 --attack_whitebox_type=top_T_top_U --top_U=30 --attack_method=PGD  --attack_norm=1 --attack_epsilon=30 --attack_step_size=3.75 --attack_num_restarts=100
