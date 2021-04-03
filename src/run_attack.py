@@ -53,36 +53,37 @@ def generate_attack(args, model, data, target, adversarial_args):
     elif args.attack_box_type == "other":
         if args.attack_otherbox_type == "transfer":
             # it shouldn't enter this clause
-            raise ValueError
+            raise Exception(
+                "Something went wrong, transfer attack shouldn't be using generate_attack")
 
-        elif args.attack_otherbox_type == "decision":
-            # this attack fails to find perturbation for misclassification in its
-            # initialization part. Then it quits.
+        elif args.attack_otherbox_type == "boundary":
             import foolbox as fb
 
             fmodel = fb.PyTorchModel(model, bounds=(0, 1))
 
-            attack = fb.attacks.BoundaryAttack(
-                init_attack=fb.attacks.LinearSearchBlendedUniformNoiseAttack(
-                    # directions=100000, steps=1000,
-                ),
-                # init_attack=fb.attacks.LinfDeepFoolAttack(steps=100),
-                steps=2500,
-                spherical_step=0.01,
-                source_step=0.01,
-                source_step_convergance=1e-07,
-                step_adaptation=1.5,
-                tensorboard=False,
-                update_stats_every_k=10,
-            )
-            # attack = fb.attacks.BoundaryAttack()
-            epsilons = [8 / 255]
-            _, perturbation, success = attack(
-                fmodel, data, target, epsilons=epsilons)
-            return perturbation[0] - data
+            attack = fb.attacks.BoundaryAttack()
+            l2_epsilons = [adversarial_args["attack_args"]
+                           ["attack_params"]["eps"]]
+            raw_advs, clipped_advs, success = attack(
+                fmodel, data, target, epsilons=l2_epsilons,
+                starting_points=adversarial_args["attack_args"]["starting_points"])
+            return raw_advs[0] - data
+
+        elif args.attack_otherbox_type == "hopskip":
+            import foolbox as fb
+
+            fmodel = fb.PyTorchModel(model, bounds=(0, 1))
+
+            attack = fb.attacks.HopSkipJump()
+            l2_epsilons = [adversarial_args["attack_args"]
+                           ["attack_params"]["eps"]]
+            raw_advs, clipped_advs, success = attack(
+                fmodel, data, target, epsilons=l2_epsilons,
+                starting_points=adversarial_args["attack_args"]["starting_points"])
+            return raw_advs[0] - data
 
         else:
-            raise ValueError
+            raise Exception("Choose white or other for attack_box_type.")
 
     adversarial_args["attack_args"]["x"] = data
     adversarial_args["attack_args"]["y_true"] = target
@@ -271,6 +272,32 @@ def main():
     loaders = test_loader
 
     start = time.time()
+
+    if args.attack_box_type == "other" and (args.otherbox_type == "boundary" or args.otherbox_type == "hopskip"):
+        img_distances = np.load(
+            f'./data/image_distances/{args.dataset}/distances.npy')
+        img_distances_idx = np.argsort(img_distances)
+        preds = torch.zeros(10000, dtype=torch.int)
+
+        for batch_idx, items in enumerate(loaders):
+
+            data, target = items
+            data = data.to(device)
+            target = target.to(device)
+            preds[batch_idx
+                  * args.test_batch_size: (batch_idx + 1)
+                  * args.test_batch_size] = ensemble_model(data).argmax(dim=1).detach().cpu()
+
+        closest_adv_idx = torch.zeros(10000, dtype=int)
+        for i in range(10000):
+            j = 1
+            while preds[img_distances_idx[i, j]] == test_loader.dataset.targets[i]:
+                j += 1
+            closest_adv_idx[i] = img_distances_idx[i, j]
+
+        closest_images = torch.tensor(
+            test_loader.dataset.data[closest_adv_idx]/255, dtype=torch.float32).permute(0, 3, 1, 2)
+
     for batch_idx, items in enumerate(
         tqdm(loaders, desc="Attack progress", leave=False)
     ):
@@ -280,6 +307,11 @@ def main():
         data, target = items
         data = data.to(device)
         target = target.to(device)
+
+        if args.attack_box_type == "other" and (args.otherbox_type == "boundary" or args.otherbox_type == "hopskip"):
+            adversarial_args['attack_args']['starting_points'] = closest_images[batch_idx
+                                                                                * args.test_batch_size: (batch_idx + 1)
+                                                                                * args.test_batch_size].to(device)
 
         if not read_from_file:
             attack_batch = generate_attack(

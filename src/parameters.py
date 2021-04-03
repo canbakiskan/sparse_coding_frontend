@@ -257,7 +257,7 @@ def get_arguments():
         "--attack_otherbox_type",
         type=str,
         default="transfer",
-        choices=["transfer", "decision"],
+        choices=["transfer", "boundary", "hopskip", "genattack"],
         metavar="",
         help="Other box (black, pseudowhite) attack type",
     )
