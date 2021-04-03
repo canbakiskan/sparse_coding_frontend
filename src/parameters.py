@@ -246,7 +246,7 @@ def get_arguments():
     adv_testing.add_argument(
         "--attack_whitebox_type",
         type=str,
-        default="W-AIGA",
+        default="W-NFGA",
         choices=["SW", "W-NFGA", "W-AIGA", "W-AGGA",
                  "top_T_dropout_identity", "top_T_top_U"],
         metavar="",
