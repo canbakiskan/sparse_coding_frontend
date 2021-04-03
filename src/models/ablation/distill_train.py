@@ -106,8 +106,8 @@ def main():
     """ main function to run the experiments """
 
     args = get_arguments()
-    if not os.path.exists(args.directory + "logs"):
-        os.mkdir(args.directory + "logs")
+    if not os.path.exists(os.dirname(classifier_log_namer(args))):
+        os.makedirs(os.dirname(classifier_log_namer(args)))
 
     logging.basicConfig(
         format="[%(asctime)s] - %(message)s",
@@ -253,8 +253,8 @@ def main():
 
     # Save model parameters
     if args.save_checkpoint:
-        if not os.path.exists(args.directory + "checkpoints/classifiers/"):
-            os.makedirs(args.directory + "checkpoints/classifiers/")
+        if not os.path.exists(os.dirname(distillation_ckpt_namer(args))):
+            os.makedirs(os.dirname(distillation_ckpt_namer(args)))
 
         distillation_filepath = distillation_ckpt_namer(args)
         torch.save(classifier.state_dict(), distillation_filepath)

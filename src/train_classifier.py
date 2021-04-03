@@ -49,8 +49,8 @@ def main():
     """ main function to run the experiments """
 
     args = get_arguments()
-    if not os.path.exists(args.directory + "logs"):
-        os.mkdir(args.directory + "logs")
+    if not os.path.exists(os.dirname(classifier_log_namer(args))):
+        os.makedirs(os.dirname(classifier_log_namer(args)))
 
     logging.basicConfig(
         format="[%(asctime)s] - %(message)s",
@@ -240,8 +240,8 @@ def main():
         logger.info(f"Saved to {classifier_filepath}")
 
         if not args.no_autoencoder:
-            if not os.path.exists(args.directory + "checkpoints/autoencoders/"):
-                os.makedirs(args.directory + "checkpoints/autoencoders/")
+            if not os.path.exists(os.dirname(autoencoder_ckpt_namer(args))):
+                os.makedirs(os.dirname(autoencoder_ckpt_namer(args)))
 
             autoencoder_filepath = autoencoder_ckpt_namer(args)
             if args.autoencoder_train_supervised:

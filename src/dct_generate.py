@@ -3,6 +3,7 @@ from .utils.namers import dict_file_namer
 import numpy as np
 from scipy.fftpack import dct, idct
 import matplotlib.pyplot as plt
+import os
 
 
 def main():
@@ -33,6 +34,10 @@ def main():
         dcts[i, :] /= np.linalg.norm(dcts[i, :])
 
     dict_filepath = dict_file_namer(args)
+
+    if not os.path.exists(os.dirname(dict_filepath)):
+        os.makedirs(os.dirname(dict_filepath))
+
     np.savez(dict_filepath, dict=dcts)
 
     dcts = (dcts-dcts.min())/(dcts.max()-dcts.min())

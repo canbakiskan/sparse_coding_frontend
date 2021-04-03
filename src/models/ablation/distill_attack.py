@@ -1,4 +1,5 @@
 from tqdm import tqdm
+import os
 from os import path
 
 from ...utils.namers import (
@@ -108,6 +109,9 @@ def main():
         sys.stdout.write("\033[K")
         if response != "y":
             recompute = False
+
+    if not os.path.exists(os.dirname(attack_log_namer(args))):
+        os.makedirs(os.dirname(attack_log_namer(args)))
 
     logging.basicConfig(
         format="[%(asctime)s] - %(message)s",
@@ -277,6 +281,10 @@ def main():
 
     if args.save_attack:
         attack_filepath = attack_file_namer(args)
+
+        if not os.path.exists(os.dirname(attack_file_namer(args))):
+            os.makedirs(os.dirname(attack_file_namer(args)))
+
         np.save(attack_filepath, attacked_images.detach().cpu().numpy())
 
         logger.info(f"Saved to {attack_filepath}")

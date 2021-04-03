@@ -28,6 +28,9 @@ def main():
         print("Use train_classifier.py for supervised training of autoencoder.")
         exit()
 
+    if not os.path.exists(os.dirname(autoencoder_log_namer(args))):
+        os.makedirs(os.dirname(autoencoder_log_namer(args)))
+
     logging.basicConfig(
         format="[%(asctime)s] - %(message)s",
         datefmt="%Y/%m/%d %H:%M:%S",
@@ -92,8 +95,8 @@ def main():
 
     if args.save_checkpoint:
 
-        if not os.path.exists(args.directory + "checkpoints/"):
-            os.makedirs(args.directory + "checkpoints/")
+        if not os.path.exists(os.dirname(autoencoder_ckpt_namer(args))):
+            os.makedirs(os.dirname(autoencoder_ckpt_namer(args)))
 
         autoencoder_filepath = autoencoder_ckpt_namer(args)
         torch.save(autoencoder.state_dict(), autoencoder_filepath)

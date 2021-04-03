@@ -43,6 +43,7 @@ import torchvision.models as models
 import eagerpy as ep
 from foolbox import PyTorchModel, accuracy, samples
 from foolbox.attacks import LinfPGD, L2PGD
+import os
 
 logger = logging.getLogger(__name__)
 
@@ -141,6 +142,9 @@ def main():
         sys.stdout.write("\033[K")
         if response != "y":
             recompute = False
+
+    if not os.path.exists(os.dirname(attack_log_namer(args))):
+        os.makedirs(os.dirname(attack_log_namer(args)))
 
     logging.basicConfig(
         format="[%(asctime)s] - %(message)s",

@@ -11,6 +11,7 @@ from .utils.get_modules import get_dictionary
 from .parameters import get_arguments
 from .utils.read_datasets import read_dataset
 import torch
+import os
 
 
 def extract_patches(images, patch_shape, stride, in_order="NHWC", out_order="NHWC"):
@@ -192,6 +193,9 @@ def main():
         dictionary_transpose = dico.components_
         dt = time() - t0
         print("done in %.2fs." % dt)
+
+        if not os.path.exists(os.dirname(dict_filepath)):
+            os.makedirs(os.dirname(dict_filepath))
 
         np.savez(dict_filepath, dict=dico.components_,
                  params=dico.get_params())
