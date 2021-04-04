@@ -1,8 +1,6 @@
-WARNING: top_T taking was wrongly implemented, fixed in commit 3b4d60aa. This makes already existing checkpoints useless.
+# Sparse Coding Frontend for Robust Neural Networks
 
-# A Neuro-Inspired Autoencoding Defense Against Adversarial Perturbations
-
-This repository is the official implementation of "A Neuro-Inspired Autoencoding Defense Against Adversarial Perturbations" paper at this [link](https://arxiv.org/pdf/2011.10867.pdf). 
+This repository is the official implementation of "Sparse Coding Frontend for Robust Neural Networks" paper published in ICLR 2021 Workshop on Security and Safety in Machine Learning Systems
 
 ## Requirements
 
@@ -19,16 +17,16 @@ export PYTHONPATH="${PYTHONPATH}:/path/containing/project/directory"
 ```
 
 Download Imagenette [here](https://s3.amazonaws.com/fast-ai-imageclas/imagenette2-160.tgz), and place in the `data/original_dataset/`. Then extract it using `tar -xvzf imagenette2-160.tgz`.
-CIFAR-10 will be downloaded automatically when the code is run.
+CIFAR10 will be downloaded automatically when the code is run.
 
-Following commands assume the name of the folder is `neuro-inspired-defense`.
+Following commands assume the name of the folder is `sparse_coding_frontend`.
 
 ## Dictionary
 
 To learn the overcomplete dictionary:
 
 ```bash
-python -m neuro-inspired-defense.src.learn_patch_dict.py
+python -m sparse_coding_frontend.src.learn_patch_dict.py
 ```
 
 
@@ -38,13 +36,7 @@ To train the models in the paper, run these commands:
 
 Our defense:
 ```bash
-python -m neuro-inspired-defense.src.train_classifier.py --autoencoder_train_supervised 
-```
-
-Our defense, Unsupervised:
-```bash
-python -m neuro-inspired-defense.src.train_autoencoder.py
-python -m neuro-inspired-defense.src.train_classifier.py 
+python -m sparse_coding_frontend.src.train.py  
 ```
 
 ## Evaluation
@@ -53,17 +45,17 @@ There are many parameters you can use for defense evaluation. For a list of all 
 
 Our defense:
 ```bash
-python -m neuro-inspired-defense.src.run_attack.py --autoencoder_train_supervised
+python -m sparse_coding_frontend.src.run_attack.py 
 ```
 Our defense, Unsupervised:
 ```bash
-python -m neuro-inspired-defense.src.run_attack.py 
+python -m sparse_coding_frontend.src.run_attack.py 
 ```
 
 
 ## Shell Scripts
 
-Alternatively, you can run the bash script for the corresponding model located in the `shell_scripts` directory. These will train the autoencoder and the classifier, and then evaluate attacks using different of parameters.
+Alternatively, you can run the bash script for the corresponding model located in the `shell_scripts` directory. These will train the frontend and the classifier, and then evaluate attacks using different of parameters.
 
 ## Pre-trained Models
 
@@ -72,7 +64,7 @@ You can find pretrained models inside the `checkpoints` directory.
 
 ## Folder Structure 
 
-Adversarial framework folder contains the codes for adversarial attacks, analysis, and adversarial training functions. Src folder contains all the necessary codes for autoencoder, training, testing, models, and utility functions. Repository structure is as follows:
+Adversarial framework folder contains the codes for adversarial attacks, analysis, and adversarial training functions. Src folder contains all the necessary codes for frontend, training, testing, models, and utility functions. Repository structure is as follows:
 
 ```
 Repository
@@ -83,26 +75,24 @@ Repository
     │   learn_patch_dict.py                  Sparse dictionary learning
     │   parameters.py                        Main file for parameters
     │   run_attack.py                        Evaluate attacks on models
-    │   train_autoencoder.py                 Trains the autoencoder
-    │   train_classifier.py                  Trains the classifier with or without the autoencoder
+    │   train_frontend.py                 Trains the frontend
+    │   train_classifier.py                  Trains the classifier with or without the frontend
     │   train_test_functions.py              Train/test helper functions
     │
     │───models
-    │   │   autoencoders.py 	             Different autoencoder definitions
+    │   │   frontends.py 	             Different frontend definitions
     │   │   bpda.py 	                     Backward pass differentiable approximation model
-    │   │   combined.py                      Model that combines autoencoder and clasifier
+    │   │   combined.py                      Model that combines frontend and clasifier
     │   │   decoders.py                      Different decoder definitions
     │   │   efficientnet.py                  EfficientNet definition
-    │   │   encoders.py                      Different encoder definitions
+    │   │   encoder.py                      Different encoder definitions
     │   │   ensemble.py                      Ensemble processing model
     │   │   preact_resnet.py                 Pre-activation ResNet definition
     │   │   resnet.py                        ResNet and Wide ResNet definition
     │   │   tools.py                         Tools/functions used in models
     │   └───ablation
     │       │   dropout_resnet.py            ResNet with dropout in first layer
-    │       │   find_blur_sigma.py           Find sigma of gaussian filter in gaussian_blur.py
-    │       │   gaussian_blur.py             Gaussian blurring preprocessing
-    │       │   sparse_autoencoder.py        Sparse autoencoder definition
+    │       │   sparse_frontend.py        Sparse frontend definition
     │
     └───utils
         │   get_modules.py                   
