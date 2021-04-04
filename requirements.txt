@@ -7,3 +7,4 @@ scikit-learn==0.22
 foolbox==3.0.2
 tqdm==4.36.1
 deepillusion==0.3.2 
+toml==0.10.1
