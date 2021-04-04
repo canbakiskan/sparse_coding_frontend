@@ -22,14 +22,14 @@ from .utils.read_datasets import read_dataset
 from .utils.get_optimizer_scheduler import get_optimizer_scheduler
 
 from .utils.namers import (
-    autoencoder_ckpt_namer,
-    autoencoder_log_namer,
+    frontend_ckpt_namer,
+    frontend_log_namer,
     classifier_ckpt_namer,
     classifier_log_namer,
 )
 
 from .models.combined import Combined
-from .utils.get_modules import get_autoencoder
+from .utils.get_modules import get_frontend
 from deepillusion.torchattacks import (
     PGD,
     PGD_EOT,
@@ -39,7 +39,7 @@ from deepillusion.torchattacks import (
     PGD_EOT_sign,
 )
 from deepillusion.torchdefenses import adversarial_epoch, adversarial_test
-from .models.autoencoder import autoencoder_class
+from .models.frontend import frontend_class
 import sys
 
 logger = logging.getLogger(__name__)
@@ -69,59 +69,60 @@ def main():
     torch.manual_seed(args.seed)
     torch.cuda.manual_seed(args.seed)
 
-    use_cuda = not args.no_cuda and torch.cuda.is_available()
+    use_cuda = args.use_gpu and torch.cuda.is_available()
     device = torch.device("cuda" if use_cuda else "cpu")
 
     x_min = 0.0
     x_max = 1.0
-    # L = round((32 - args.defense_patchsize) / args.defense_stride + 1)
+    # L = round((32 - args.defense.patch_size) / args.defense.stride + 1)
 
     train_loader, test_loader = read_dataset(args)
 
-    if args.classifier_arch == "resnet":
-        classifier = ResNet(num_outputs=args.num_classes).to(device)
-    elif args.classifier_arch == "resnetwide":
-        classifier = ResNetWide(num_outputs=args.num_classes).to(device)
-    elif args.classifier_arch == "efficientnet":
+    if args.neural_net.classifier_arch == "resnet":
+        classifier = ResNet(num_outputs=args.dataset.nb_classes).to(device)
+    elif args.neural_net.classifier_arch == "resnetwide":
+        classifier = ResNetWide(num_outputs=args.dataset.nb_classes).to(device)
+    elif args.neural_net.classifier_arch == "efficientnet":
         classifier = EfficientNet.from_name(
-            "efficientnet-b0", num_classes=args.num_classes, dropout_rate=0.2
+            "efficientnet-b0", num_classes=args.dataset.nb_classes, dropout_rate=0.2
         ).to(device)
-    elif args.classifier_arch == "preact_resnet":
-        classifier = PreActResNet101(num_classes=args.num_classes).to(device)
-    elif args.classifier_arch == "dropout_resnet":
+    elif args.neural_net.classifier_arch == "preact_resnet":
+        classifier = PreActResNet101(
+            num_classes=args.dataset.nb_classes).to(device)
+    elif args.neural_net.classifier_arch == "dropout_resnet":
         classifier = dropout_ResNet(
-            dropout_p=args.dropout_p,
-            nb_filters=args.dict_nbatoms,
-            num_outputs=args.num_classes,
+            dropout_p=args.defense.dropout_p,
+            nb_filters=args.dictionary.nb_atoms,
+            num_outputs=args.dataset.nb_classes,
         ).to(device)
-    elif args.classifier_arch == "resnet_after_encoder":
+    elif args.neural_net.classifier_arch == "resnet_after_encoder":
         classifier = ResNet_after_encoder(
-            nb_filters=args.dict_nbatoms, num_outputs=args.num_classes).to(device)
+            nb_filters=args.dictionary.nb_atoms, num_outputs=args.dataset.nb_classes).to(device)
     else:
         raise NotImplementedError
 
-    if not args.no_autoencoder:
+    if not args.neural_net.no_frontend:
 
-        if args.autoencoder_train_supervised:
+        if args.frontend_train_supervised:
 
-            autoencoder = autoencoder_class(
+            frontend = frontend_class(
                 args).to(device)
 
-            for p in autoencoder.parameters():
+            for p in frontend.parameters():
                 p.requires_grad = True
 
-            if args.ablation_no_dictionary:
-                autoencoder.dictionary_update_on()
+            if args.ablation.no_dictionary:
+                frontend.dictionary_update_on()
             else:
-                autoencoder.dictionary_update_off()
+                frontend.dictionary_update_off()
 
         else:
-            autoencoder = get_autoencoder(args)
+            frontend = get_frontend(args)
 
-            for p in autoencoder.parameters():
+            for p in frontend.parameters():
                 p.requires_grad = False
 
-        model = Combined(autoencoder, classifier)
+        model = Combined(frontend, classifier)
 
     else:
         model = classifier
@@ -140,7 +141,7 @@ def main():
     optimizer, scheduler = get_optimizer_scheduler(
         args, model, len(train_loader))
 
-    if args.adv_training_attack:
+    if args.adv_training.method:
 
         attacks = dict(
             PGD=PGD,
@@ -152,26 +153,26 @@ def main():
         )
 
         attack_params = {
-            "norm": args.adv_training_norm,
-            "eps": args.adv_training_epsilon,
-            "alpha": args.adv_training_alpha,
-            "step_size": args.adv_training_step_size,
-            "num_steps": args.adv_training_num_steps,
+            "norm": args.adv_training.norm,
+            "eps": args.adv_training.budget,
+            "alpha": args.adv_training.rfgsm_alpha,
+            "step_size": args.adv_training.step_size,
+            "num_steps": args.adv_training.nb_steps,
             "random_start": (
-                args.adv_training_rand and args.adv_training_num_restarts > 1
+                args.adv_training.rand and args.adv_training.nb_restarts > 1
             ),
-            "num_restarts": args.adv_training_num_restarts,
-            "EOT_size": args.adv_training_EOT_size,
+            "num_restarts": args.adv_training.nb_restarts,
+            "EOT_size": args.adv_training.EOT_size,
         }
 
         data_params = {"x_min": 0.0, "x_max": 1.0}
 
-        if "CWlinf" in args.adv_training_attack:
-            adv_training_attack = args.adv_training_attack.replace(
+        if "CWlinf" in args.adv_training.method:
+            adv_training_attack = args.adv_training.method.replace(
                 "CWlinf", "PGD")
             loss_function = "carlini_wagner"
         else:
-            adv_training_attack = args.adv_training_attack
+            adv_training_attack = args.adv_training.method
             loss_function = "cross_entropy"
 
         adversarial_args = dict(
@@ -182,10 +183,10 @@ def main():
             loss_function=loss_function,
         )
 
-        logger.info(args.adv_training_attack + " training")
+        logger.info(args.adv_training.method + " training")
         logger.info("Epoch \t Seconds \t LR \t \t Train Loss \t Train Acc")
 
-        for epoch in tqdm(range(1, args.classifier_epochs + 1)):
+        for epoch in tqdm(range(1, args.neural_net.nb_epochs + 1)):
             start_time = time.time()
 
             train_args = dict(
@@ -213,7 +214,7 @@ def main():
         logger.info("Epoch \t Seconds \t LR \t \t Train Loss \t Train Acc")
 
         logger.info("Standard training")
-        for epoch in tqdm(range(1, args.classifier_epochs + 1)):
+        for epoch in tqdm(range(1, args.neural_net.nb_epochs + 1)):
             start_time = time.time()
 
             train_loss, train_acc = train(
@@ -230,7 +231,7 @@ def main():
                 f"Test  \t loss: {test_loss:.4f} \t acc: {test_acc:.4f}")
 
     # Save model parameters
-    if args.save_checkpoint:
+    if args.neural_net.save_checkpoint:
         if not os.path.exists(args.directory + "checkpoints/classifiers/"):
             os.makedirs(args.directory + "checkpoints/classifiers/")
 
@@ -239,15 +240,15 @@ def main():
 
         logger.info(f"Saved to {classifier_filepath}")
 
-        if not args.no_autoencoder:
-            if not os.path.exists(os.dirname(autoencoder_ckpt_namer(args))):
-                os.makedirs(os.dirname(autoencoder_ckpt_namer(args)))
+        if not args.neural_net.no_frontend:
+            if not os.path.exists(os.dirname(frontend_ckpt_namer(args))):
+                os.makedirs(os.dirname(frontend_ckpt_namer(args)))
 
-            autoencoder_filepath = autoencoder_ckpt_namer(args)
-            if args.autoencoder_train_supervised:
-                torch.save(autoencoder.state_dict(), autoencoder_filepath)
+            frontend_filepath = frontend_ckpt_namer(args)
+            if args.frontend_train_supervised:
+                torch.save(frontend.state_dict(), frontend_filepath)
 
-            logger.info(f"Saved to {autoencoder_filepath}")
+            logger.info(f"Saved to {frontend_filepath}")
 
 
 if __name__ == "__main__":
