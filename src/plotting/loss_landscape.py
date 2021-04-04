@@ -54,19 +54,7 @@ def main():
         model = model.to(device)
         model.eval()
 
-    if (
-        "dropout" in args.autoencoder_arch
-        and not args.no_autoencoder
-        and args.ensemble_E > 1
-    ):
-        from ..models.ensemble import Ensemble_post_softmax
-
-        ensemble_model = Ensemble_post_softmax(model, args.ensemble_E)
-
-    else:
-        ensemble_model = model
-
-    ensemble_model.eval()
+    model.eval()
 
     for p in model.parameters():
         p.requires_grad = False
@@ -95,7 +83,7 @@ def main():
     }
 
     loss_landscape(
-        ensemble_model,
+        model,
         test_loader,
         data_params,
         attack_params,

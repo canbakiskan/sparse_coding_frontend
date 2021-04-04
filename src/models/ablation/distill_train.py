@@ -151,28 +151,15 @@ def main():
         teacher_model = teacher_model.to(device)
         teacher_model.eval()
 
-    if (
-        "dropout" in args.autoencoder_arch
-        and not args.no_autoencoder
-        and args.ensemble_E > 1
-    ):
-        from ..ensemble import Ensemble_post_softmax
+    teacher_model.eval()
 
-        teacher_ensemble_model = Ensemble_post_softmax(
-            teacher_model, args.ensemble_E)
-
-    else:
-        teacher_ensemble_model = teacher_model
-
-    teacher_ensemble_model.eval()
-
-    for p in teacher_ensemble_model.parameters():
+    for p in teacher_model.parameters():
         p.requires_grad = False
     # TEACHER MODEL
 
     x_min = 0.0
     x_max = 1.0
-    # L = round((32 - args.defense_patchsize) / args.defense_stride + 1)
+    # L = round((32 - args.defense.patch_size) / args.defense.stride + 1)
 
     train_loader, test_loader = read_dataset(args)
 

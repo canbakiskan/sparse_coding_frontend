@@ -151,19 +151,7 @@ def main():
         model = model.to(device)
         model.eval()
 
-    if (
-        "dropout" in args.autoencoder_arch
-        and not args.no_autoencoder
-        and args.ensemble_E > 1
-    ):
-        from .models.ensemble import Ensemble_post_softmax
-
-        ensemble_model = Ensemble_post_softmax(model, args.ensemble_E)
-
-    else:
-        ensemble_model = model
-
-    ensemble_model.eval()
+    model.eval()
 
     for p in model.parameters():
         p.requires_grad = False
@@ -269,8 +257,7 @@ def main():
             target = target.to(device)
             preds[batch_idx
                   * args.neural_net.test_batch_size: (batch_idx + 1)
-                  * args.test_batch_size: (batch_idx + 1)
-                  * args.test_batch_size] = ensemble_model(data).argmax(dim=1).detach().cpu()
+                  * args.neural_net.test_batch_size] = model(data).argmax(dim=1).detach().cpu()
 
         closest_adv_idx = torch.zeros(10000, dtype=int)
         for i in range(10000):
@@ -311,7 +298,7 @@ def main():
                 ] = data.detach().cpu()
 
         with torch.no_grad():
-            out = ensemble_model(data).detach()
+            out = model(data).detach()
             attack_output[
                 batch_idx
                 * args.neural_net.test_batch_size: (batch_idx + 1)

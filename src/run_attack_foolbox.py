@@ -187,19 +187,7 @@ def main():
         model = model.to(device)
         model.eval()
 
-    if (
-        "dropout" in args.autoencoder_arch
-        and not args.no_autoencoder
-        and args.ensemble_E > 1
-    ):
-        from .models.ensemble import Ensemble_post_softmax
-
-        ensemble_model = Ensemble_post_softmax(model, args.ensemble_E)
-
-    else:
-        ensemble_model = model
-
-    ensemble_model.eval()
+    model.eval()
 
     for p in model.parameters():
         p.requires_grad = False
@@ -256,13 +244,13 @@ def main():
 
         from torchattacks import PGDL2
 
-        attack = PGDL2(ensemble_model, eps=0.6, alpha=0.6/40,
+        attack = PGDL2(model, eps=0.6, alpha=0.6/40,
                        steps=100, random_start=False, eps_for_division=1e-10)
 
         adv_images = attack(data, target)
 
         # breakpoint()
-        attack_out = ensemble_model(adv_images)
+        attack_out = model(adv_images)
         pred_attack = attack_out.argmax(dim=1, keepdim=True)
 
         robust_accuracy = pred_attack.eq(
