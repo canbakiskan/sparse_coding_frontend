@@ -1,15 +1,15 @@
 from torch import nn
 import torch.nn.functional as F
-from ..encoders import take_top_T
+from ..encoder import take_top_T
 from ..decoders import take_middle_of_img
 
 
-class sparse_autoencoder(nn.Module):
+class sparse_frontend(nn.Module):
     def __init__(self, args):
-        super(sparse_autoencoder, self).__init__()
+        super(sparse_frontend, self).__init__()
 
-        self.image_size = args.image_shape[0]
-        self.T = args.top_T
+        self.image_size = args.dataset.img_shape[0]
+        self.T = args.defense.top_T
 
         self.conv1 = nn.Conv2d(
             3, 100, kernel_size=4, stride=2, padding=1, bias=True
@@ -18,10 +18,10 @@ class sparse_autoencoder(nn.Module):
             100, 300, kernel_size=3, stride=1, padding=0, bias=True
         )
         self.conv3 = nn.Conv2d(
-            300, args.dict_nbatoms, kernel_size=3, stride=1, padding=0, bias=True
+            300, args.dictionary.nb_atoms, kernel_size=3, stride=1, padding=0, bias=True
         )
         self.deconv1 = nn.ConvTranspose2d(
-            args.dict_nbatoms, 300, kernel_size=3, stride=1, padding=0, bias=True
+            args.dictionary.nb_atoms, 300, kernel_size=3, stride=1, padding=0, bias=True
         )
         self.deconv2 = nn.ConvTranspose2d(
             300, 100, kernel_size=3, stride=1, padding=0, bias=True

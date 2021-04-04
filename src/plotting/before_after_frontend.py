@@ -1,28 +1,16 @@
 import torch
-import torch.optim as optim
-import torch.backends.cudnn as cudnn
 
-import os
 import numpy as np
-import logging
-
-from ..train_test_functions import (
-    train_autoencoder_unsupervised,
-    test_autoencoder_unsupervised,
-)
 from ..parameters import get_arguments
 from ..utils.read_datasets import read_dataset
-from tqdm import tqdm
-from ..utils.namers import autoencoder_ckpt_namer, autoencoder_log_namer
-from torchvision import datasets, transforms
 import matplotlib.pyplot as plt
-from ..utils.get_modules import get_autoencoder
+from ..utils.get_modules import get_frontend
 
 
 def main():
     args = get_arguments()
 
-    use_cuda = not args.no_cuda and torch.cuda.is_available()
+    use_cuda = args.use_gpu and torch.cuda.is_available()
     device = torch.device("cuda" if use_cuda else "cpu")
 
     x_min = 0.0
@@ -30,18 +18,18 @@ def main():
 
     train_loader, test_loader = read_dataset(args)
 
-    autoencoder = get_autoencoder(args)
-    autoencoder.eval()
+    frontend = get_frontend(args)
+    frontend.eval()
 
     random_indices = np.random.choice(len(test_loader), 10)
 
     for batch_idx, (data, targets) in enumerate(test_loader):
         if batch_idx in random_indices:
-            reconstructions = autoencoder(data.to(device))
+            reconstructions = frontend(data.to(device))
 
             plt.figure(figsize=(10, 5))
 
-            img_index = np.random.choice(args.test_batch_size)
+            img_index = np.random.choice(args.neural_net.test_batch_size)
             plt.subplot(1, 2, 1)
             plt.imshow(data[img_index].detach().cpu().permute(1, 2, 0))
             plt.xticks([])

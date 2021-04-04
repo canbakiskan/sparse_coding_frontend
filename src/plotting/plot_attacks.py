@@ -24,11 +24,11 @@ def main():
         exit()
 
     # this is just for the adversarial test below
-    if args.dataset == "CIFAR10":
+    if args.dataset.name == "CIFAR10":
         _, test_loader = cifar10(args)
-    elif args.dataset == "Tiny-ImageNet":
+    elif args.dataset.name == "Tiny-ImageNet":
         _, test_loader = tiny_imagenet(args)
-    elif args.dataset == "Imagenette":
+    elif args.dataset.name == "Imagenette":
         _, test_loader = imagenette(args)
     else:
         raise NotImplementedError

@@ -8,13 +8,13 @@ from .utils.namers import (
 )
 from .utils.get_modules import (
     get_classifier,
-    get_autoencoder,
+    get_frontend,
 )
 
 import numpy as np
 import torch
 import torch.nn.functional as F
-from .models.combined import Combined, Combined_inner_BPDA_identity, Combined_inner_BPDA_gaussianblur
+from .models.combined import Combined, Combined_inner_BPDA_identity
 from deepillusion.torchattacks import (
     PGD,
     PGD_EOT,
@@ -42,22 +42,23 @@ logger = logging.getLogger(__name__)
 
 def generate_attack(args, model, data, target, adversarial_args):
 
-    if args.attack_box_type == "white":
+    if args.adv_testing.box_type == "white":
+        adversarial_args["attack_args"]["net"] = model
 
-        if args.attack_whitebox_type == "SW":
-            adversarial_args["attack_args"]["net"] = model.module_outer
-            adversarial_args["attack_args"]["attack_params"]["EOT_size"] = 1
+        adversarial_args["attack_args"]["x"] = data
+        adversarial_args["attack_args"]["y_true"] = target
+        perturbation = adversarial_args["attack"](
+            **adversarial_args["attack_args"])
 
-        else:
-            adversarial_args["attack_args"]["net"] = model
+        return perturbation
 
-    elif args.attack_box_type == "other":
-        if args.attack_otherbox_type == "transfer":
+    elif args.adv_testing.box_type == "other":
+        if args.adv_testing.otherbox_type == "transfer":
             # it shouldn't enter this clause
             raise Exception(
                 "Something went wrong, transfer attack shouldn't be using generate_attack")
 
-        elif args.attack_otherbox_type == "boundary":
+        elif args.adv_testing.otherbox_type == "boundary":
             import foolbox as fb
 
             fmodel = fb.PyTorchModel(model, bounds=(0, 1))
@@ -70,7 +71,7 @@ def generate_attack(args, model, data, target, adversarial_args):
                 starting_points=adversarial_args["attack_args"]["starting_points"])
             return raw_advs[0] - data
 
-        elif args.attack_otherbox_type == "hopskip":
+        elif args.adv_testing.otherbox_type == "hopskip":
             import foolbox as fb
 
             fmodel = fb.PyTorchModel(model, bounds=(0, 1))
@@ -84,14 +85,10 @@ def generate_attack(args, model, data, target, adversarial_args):
             return raw_advs[0] - data
 
         else:
-            raise Exception("Choose white or other for attack_box_type.")
+            raise ValueError("Otherbox attack type not supported.")
 
-    adversarial_args["attack_args"]["x"] = data
-    adversarial_args["attack_args"]["y_true"] = target
-    perturbation = adversarial_args["attack"](
-        **adversarial_args["attack_args"])
-
-    return perturbation
+    else:
+        raise ValueError("Attack box type not supported.")
 
 
 def main():
@@ -125,48 +122,31 @@ def main():
     logger.info(args)
     logger.info("\n")
 
-    use_cuda = not args.no_cuda and torch.cuda.is_available()
+    use_cuda = args.use_gpu and torch.cuda.is_available()
     device = torch.device("cuda" if use_cuda else "cpu")
 
-    read_from_file = (args.attack_box_type ==
-                      "other" and args.attack_otherbox_type == "transfer") or not recompute
+    read_from_file = (args.adv_testing.box_type ==
+                      "other" and args.adv_testing.otherbox_type == "transfer") or not recompute
 
     if read_from_file:
-        args.save_attack = False
+        args.adv_testing.save = False
 
     classifier = get_classifier(args)
 
-    if args.no_autoencoder:
+    if args.neural_net.no_frontend:
         model = classifier
 
     else:
-        autoencoder = get_autoencoder(args)
+        frontend = get_frontend(args)
 
-        if args.attack_box_type == "white" and args.attack_whitebox_type == "W-AIGA":
-            model = Combined_inner_BPDA_identity(autoencoder, classifier)
-        elif args.attack_box_type == "white" and args.attack_whitebox_type == "W-AGGA":
-            model = Combined_inner_BPDA_gaussianblur(
-                autoencoder, classifier, args)
-        else:
-            if (
-                args.attack_box_type == "white"
-                and args.attack_whitebox_type == "top_T_dropout_identity"
-            ):
-                autoencoder.set_BPDA_type("identity")
+        if args.adv_testing.box_type == "white":
+            if args.adv_testing.backward == "top_T_dropout_identity":
+                frontend.set_BPDA_type("identity")
 
-            elif (
-                args.attack_box_type == "white"
-                and args.attack_whitebox_type == "top_T_top_U"
-            ):
-                autoencoder.set_BPDA_type("top_U")
+            elif args.adv_testing.backward == "top_T_top_U":
+                frontend.set_BPDA_type("top_U")
 
-            elif (
-                args.attack_box_type == "white"
-                and args.attack_whitebox_type == "W-NFGA"
-            ):
-                autoencoder.set_BPDA_type("maxpool_like")
-
-            model = Combined(autoencoder, classifier)
+            model = Combined(frontend, classifier)
 
         model = model.to(device)
         model.eval()
@@ -189,17 +169,17 @@ def main():
         p.requires_grad = False
 
     # this is just for the adversarial test below
-    if args.dataset == "CIFAR10":
+    if args.dataset.name == "CIFAR10":
         _, test_loader = cifar10(args)
-    elif args.dataset == "Tiny-ImageNet":
+    elif args.dataset.name == "Tiny-ImageNet":
         _, test_loader = tiny_imagenet(args)
-    elif args.dataset == "Imagenette":
+    elif args.dataset.name == "Imagenette":
         _, test_loader = imagenette(args)
     else:
         raise NotImplementedError
 
-    if not args.attack_skip_clean:
-        test_loss, test_acc = adversarial_test(ensemble_model, test_loader)
+    if not args.adv_testing.skip_clean:
+        test_loss, test_acc = adversarial_test(model, test_loader)
         logger.info(f"Clean \t loss: {test_loss:.4f} \t acc: {test_acc:.4f}")
 
     attacks = dict(
@@ -213,23 +193,23 @@ def main():
     )
 
     attack_params = {
-        "norm": args.attack_norm,
-        "eps": args.attack_epsilon,
+        "norm": args.adv_testing.norm,
+        "eps": args.adv_testing.budget,
         "alpha": args.attack_alpha,
-        "step_size": args.attack_step_size,
-        "num_steps": args.attack_num_steps,
-        "random_start": (args.adv_training_rand and args.adv_training_num_restarts > 1),
-        "num_restarts": args.attack_num_restarts,
-        "EOT_size": args.attack_EOT_size,
+        "step_size": args.adv_testing.step_size,
+        "num_steps": args.adv_testing.nb_steps,
+        "random_start": (args.adv_testing.rand and args.adv_training.nb_restarts > 1),
+        "num_restarts": args.adv_testing.nb_restarts,
+        "EOT_size": args.adv_testing.EOT_size,
     }
 
     data_params = {"x_min": 0.0, "x_max": 1.0}
 
-    if "CWlinf" in args.attack_method:
-        attack_method = args.attack_method.replace("CWlinf", "PGD")
+    if "CWlinf" in args.adv_testing.method:
+        attack_method = args.adv_testing.method.replace("CWlinf", "PGD")
         loss_function = "carlini_wagner"
     else:
-        attack_method = args.attack_method
+        attack_method = args.adv_testing.method
         loss_function = "cross_entropy"
 
     adversarial_args = dict(
@@ -238,7 +218,7 @@ def main():
             net=model,
             data_params=data_params,
             attack_params=attack_params,
-            progress_bar=args.attack_progress_bar,
+            progress_bar=args.adv_testing.progress_bar,
             verbose=True,
             loss_function=loss_function,
         ),
@@ -247,28 +227,28 @@ def main():
     test_loss = 0
     correct = 0
 
-    if args.save_attack:
+    if args.adv_testing.save:
         attacked_images = torch.zeros(len(
-            test_loader.dataset.targets), args.image_shape[2], args.image_shape[0], args.image_shape[1])
+            test_loader.dataset.targets), args.dataset.img_shape[2], args.dataset.img_shape[0], args.dataset.img_shape[1])
 
     attack_output = torch.zeros(
-        len(test_loader.dataset.targets), args.num_classes)
+        len(test_loader.dataset.targets), args.dataset.nb_classes)
 
     if read_from_file:
-        if args.dataset == "CIFAR10":
+        if args.dataset.name == "CIFAR10":
             test_loader = cifar10_from_file(args)
-        elif args.dataset == "Tiny-ImageNet":
+        elif args.dataset.name == "Tiny-ImageNet":
             test_loader = tiny_imagenet_from_file(args)
-        elif args.dataset == "Imagenette":
+        elif args.dataset.name == "Imagenette":
             test_loader = imagenette_from_file(args)
         else:
             raise NotImplementedError
     else:
-        if args.dataset == "CIFAR10":
+        if args.dataset.name == "CIFAR10":
             _, test_loader = cifar10(args)
-        elif args.dataset == "Tiny-ImageNet":
+        elif args.dataset.name == "Tiny-ImageNet":
             _, test_loader = tiny_imagenet(args)
-        elif args.dataset == "Imagenette":
+        elif args.dataset.name == "Imagenette":
             _, test_loader = imagenette(args)
         else:
             raise NotImplementedError
@@ -277,9 +257,9 @@ def main():
 
     start = time.time()
 
-    if args.attack_box_type == "other" and (args.otherbox_type == "boundary" or args.otherbox_type == "hopskip"):
+    if args.adv_testing.box_type == "other" and (args.otherbox_type == "boundary" or args.otherbox_type == "hopskip"):
         img_distances_idx = np.load(
-            f'./data/image_distances/{args.dataset}/closest_img_indices.npy')
+            f'./data/image_distances/{args.dataset.name}/closest_img_indices.npy')
         preds = torch.zeros(10000, dtype=torch.int)
 
         for batch_idx, items in enumerate(loaders):
@@ -288,6 +268,7 @@ def main():
             data = data.to(device)
             target = target.to(device)
             preds[batch_idx
+                  * args.neural_net.test_batch_size: (batch_idx + 1)
                   * args.test_batch_size: (batch_idx + 1)
                   * args.test_batch_size] = ensemble_model(data).argmax(dim=1).detach().cpu()
 
@@ -305,36 +286,36 @@ def main():
     for batch_idx, items in enumerate(
         pbar := tqdm(loaders, desc="Attack progress", leave=False)
     ):
-        if args.defense_nbimgs < (batch_idx + 1) * args.test_batch_size:
+        if args.adv_testing.nb_imgs > 0 and args.adv_testing.nb_imgs < (batch_idx + 1) * args.neural_net.test_batch_size:
             break
 
         data, target = items
         data = data.to(device)
         target = target.to(device)
 
-        if args.attack_box_type == "other" and (args.otherbox_type == "boundary" or args.otherbox_type == "hopskip"):
+        if args.adv_testing.box_type == "other" and (args.otherbox_type == "boundary" or args.otherbox_type == "hopskip"):
             adversarial_args['attack_args']['starting_points'] = closest_images[batch_idx
-                                                                                * args.test_batch_size: (batch_idx + 1)
-                                                                                * args.test_batch_size].to(device)
+                                                                                * args.neural_net.test_batch_size: (batch_idx + 1)
+                                                                                * args.neural_net.test_batch_size].to(device)
 
         if not read_from_file:
             attack_batch = generate_attack(
                 args, model, data, target, adversarial_args)
             data += attack_batch
             data = data.clamp(0.0, 1.0)
-            if args.save_attack:
+            if args.adv_testing.save:
                 attacked_images[
                     batch_idx
-                    * args.test_batch_size: (batch_idx + 1)
-                    * args.test_batch_size,
+                    * args.neural_net.test_batch_size: (batch_idx + 1)
+                    * args.neural_net.test_batch_size,
                 ] = data.detach().cpu()
 
         with torch.no_grad():
             out = ensemble_model(data).detach()
             attack_output[
                 batch_idx
-                * args.test_batch_size: (batch_idx + 1)
-                * args.test_batch_size,
+                * args.neural_net.test_batch_size: (batch_idx + 1)
+                * args.neural_net.test_batch_size,
             ] = out.cpu()
 
             batch_pred = out.argmax(dim=1, keepdim=True)
@@ -343,7 +324,7 @@ def main():
                 target.view_as(batch_pred)).sum().item()
             correct_sofar += batch_correct
             accuracy_sofar = correct_sofar / \
-                ((batch_idx+1) * args.test_batch_size)
+                ((batch_idx+1) * args.neural_net.test_batch_size)
 
         pbar.set_postfix(
             Adv_ac=f"{accuracy_sofar:.4f}", refresh=True,
@@ -352,25 +333,25 @@ def main():
     end = time.time()
     logger.info(f"Attack computation time: {(end-start):.2f} seconds")
 
-    if args.dataset == "CIFAR10":
+    if args.dataset.name == "CIFAR10":
         _, test_loader = cifar10(args)
-    elif args.dataset == "Tiny-ImageNet":
+    elif args.dataset.name == "Tiny-ImageNet":
         _, test_loader = tiny_imagenet(args)
-    elif args.dataset == "Imagenette":
+    elif args.dataset.name == "Imagenette":
         _, test_loader = imagenette(args)
     else:
         raise NotImplementedError
 
-    target = torch.tensor(test_loader.dataset.targets)[: args.defense_nbimgs]
+    target = torch.tensor(test_loader.dataset.targets)[
+        : args.adv_testing.nb_imgs]
     pred_attack = attack_output.argmax(dim=1, keepdim=True)[
-        : args.defense_nbimgs]
+        : args.adv_testing.nb_imgs]
 
-    correct_attack = pred_attack.eq(target.view_as(pred_attack)).sum().item()
-    accuracy_attack = correct_attack / args.defense_nbimgs
+    accuracy_attack = pred_attack.eq(target.view_as(pred_attack)).mean().item()
 
     logger.info(f"Attack accuracy: {(100*accuracy_attack):.2f}%")
 
-    if args.save_attack:
+    if args.adv_testing.save:
         attack_filepath = attack_file_namer(args)
 
         if not os.path.exists(os.dirname(attack_file_namer(args))):

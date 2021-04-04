@@ -1,17 +1,16 @@
-from .encoders import *
+from .encoder import *
 from .decoders import *
 
-from .ablation.sparse_autoencoder import sparse_autoencoder
-from .ablation.gaussian_blur import gaussian_blur
+from .ablation.sparse_frontend import sparse_frontend
 
 
-class autoencoder_class(nn.Module):
+class frontend_class(nn.Module):
     def __init__(self, args):
-        super(autoencoder_class, self).__init__()
-        from .encoders import encoder_dict
+        super(frontend_class, self).__init__()
+        from .encoder import encoder_dict
         from .decoders import decoder_dict
 
-        arch_name = args.autoencoder_arch.replace("_autoencoder", "")
+        arch_name = args.defense.frontend_arch.replace("_frontend", "")
 
         for decoder_name in ["small", "deep", "resize", "identity"]:
             if decoder_name in arch_name:
@@ -45,7 +44,7 @@ class autoencoder_class(nn.Module):
         ):
             return getattr(self.encoder, key)
         else:
-            return super(autoencoder_class, self).__getattr__(key)
+            return super(frontend_class, self).__getattr__(key)
 
     def forward(self, x):
         return self.decoder(self.encoder(x))

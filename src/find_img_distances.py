@@ -7,13 +7,13 @@ import os
 args = get_arguments()
 
 
-if not os.path.exists(args.directory + f'data/image_distances/{args.dataset}/closest_img_indices.npy'):
+if not os.path.exists(args.directory + f'data/image_distances/{args.dataset.name}/closest_img_indices.npy'):
 
-    if args.dataset == "CIFAR10":
+    if args.dataset.name == "CIFAR10":
         _, test_loader = cifar10(args)
-    elif args.dataset == "Tiny-ImageNet":
+    elif args.dataset.name == "Tiny-ImageNet":
         _, test_loader = tiny_imagenet(args)
-    elif args.dataset == "Imagenette":
+    elif args.dataset.name == "Imagenette":
         _, test_loader = imagenette(args)
     else:
         raise NotImplementedError
@@ -34,13 +34,13 @@ if not os.path.exists(args.directory + f'data/image_distances/{args.dataset}/clo
 
     img_distances_idx = np.argsort(l2dist).astype(np.uint16)
 
-    if not os.path.exists(args.directory + f'data/image_distances/{args.dataset}'):
+    if not os.path.exists(args.directory + f'data/image_distances/{args.dataset.name}'):
         os.makedirs(args.directory +
-                    f'data/image_distances/{args.dataset}', exist_ok=True)
+                    f'data/image_distances/{args.dataset.name}', exist_ok=True)
 
     np.save(
-        f'./data/image_distances/{args.dataset}/closest_img_indices.npy', img_distances_idx[:, :1000])
+        f'./data/image_distances/{args.dataset.name}/closest_img_indices.npy', img_distances_idx[:, :1000])
 
 else:
     print(
-        f'./data/image_distances/{args.dataset}/closest_img_indices.npy already exists.')
+        f'./data/image_distances/{args.dataset.name}/closest_img_indices.npy already exists.')

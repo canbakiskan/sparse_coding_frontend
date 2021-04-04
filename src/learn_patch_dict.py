@@ -86,7 +86,7 @@ def extract_patches(images, patch_shape, stride, in_order="NHWC", out_order="NHW
     #     for j in range(10):
     #         plt.subplot(10, 10, 10*i+j+1)
     #         plt.imshow(
-    #             train_patches[10*i+j].reshape(*args.defense_patchshape))
+    #             train_patches[10*i+j].reshape(*args.defense.patch_shape))
     #         plt.xticks([])
     #         plt.yticks([])
     # plt.savefig("patches.pdf")
@@ -105,21 +105,21 @@ def main():
 
     train_loader, _ = read_dataset(args)
 
-    if args.dataset == "Imagenette" and not args.dict_online:
-        args.train_batch_size = 9469
+    if args.dataset.name == "Imagenette" and not args.dictionary.online:
+        args.neural_net.train_batch_size = 9469
 
     dict_filepath = dict_file_namer(args)
     if path.exists(dict_filepath):
         print("Dictionary already learnt and saved.")
         dictionary_transpose = get_dictionary(args).t().numpy()
     else:
-        if args.dict_online:  # this takes forever
+        if args.dictionary.online:  # this takes forever
 
             dico = MiniBatchDictionaryLearning(
-                n_components=args.dict_nbatoms,
-                alpha=args.dict_lambda,
-                n_iter=args.dict_iter,
-                batch_size=args.dict_batchsize,
+                n_components=args.dictionary.nb_atoms,
+                alpha=args.dictionary.lambda,
+                n_iter=args.dictionary.iter,
+                batch_size=args.dictionary.batch_size,
                 n_jobs=20,
             )
 
@@ -127,8 +127,8 @@ def main():
             for x_train, _ in train_loader:
                 train_patches = extract_patches(
                     x_train,
-                    args.defense_patchshape,
-                    args.defense_stride,
+                    args.defense.patch_shape,
+                    args.defense.stride,
                     in_order="NCHW",
                     out_order="NHWC",
                 )
@@ -140,10 +140,10 @@ def main():
             print("done in %.2fs." % dt)
 
         else:
-            if args.dataset == "CIFAR10":
+            if args.dataset.name == "CIFAR10":
                 x_train = train_loader.dataset.data
                 x_train = x_train / 255.0
-            elif args.dataset == "Imagenette":
+            elif args.dataset.name == "Imagenette":
 
                 from torchvision import transforms
 
@@ -164,8 +164,8 @@ def main():
             print("Images shape: {}".format(x_train.shape))
             train_patches = extract_patches(
                 x_train,
-                args.defense_patchshape,
-                args.defense_stride,
+                args.defense.patch_shape,
+                args.defense.stride,
                 in_order="NHWC",
                 out_order="NHWC",
             )
@@ -178,10 +178,10 @@ def main():
             print("Learning the dictionary...")
             t0 = time()
             dico = MiniBatchDictionaryLearning(
-                n_components=args.dict_nbatoms,
-                alpha=args.dict_lambda,
-                n_iter=args.dict_iter,
-                batch_size=args.dict_batchsize,
+                n_components=args.dictionary.nb_atoms,
+                alpha=args.dictionary.lambda,
+                n_iter=args.dictionary.iter,
+                batch_size=args.dictionary.batch_size,
                 n_jobs=20,
             )
             # we employ column notation i.e. each column is an atom.
@@ -200,14 +200,14 @@ def main():
         np.savez(dict_filepath, dict=dico.components_,
                  params=dico.get_params())
 
-    if args.dict_display:
+    if args.dictionary.display:
         import matplotlib.pyplot as plt
         from .utils import plot_settings
 
         plt.figure(figsize=(11, 10))
         for i, atom in enumerate(dictionary_transpose[-400:]):
             plt.subplot(20, 20, i + 1)
-            atom = atom.reshape(args.defense_patchshape)
+            atom = atom.reshape(args.defense.patch_shape)
             plt.imshow(
                 (atom - atom.min()) / (atom.max() - atom.min()), interpolation="nearest"
             )
@@ -216,7 +216,8 @@ def main():
             plt.xticks([])
             plt.yticks([])
 
-        plt.suptitle(f"Dictionary learned from {args.dataset}", fontsize=16)
+        plt.suptitle(
+            f"Dictionary learned from {args.dataset.name}", fontsize=16)
         plt.subplots_adjust(0.08, 0.02, 0.92, 0.85, 0.08, 0.23)
 
         figures_dir = args.directory + "figs/"

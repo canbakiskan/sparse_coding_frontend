@@ -3,12 +3,12 @@ from tqdm import tqdm
 
 from ..utils.get_modules import (
     get_classifier,
-    get_autoencoder,
+    get_frontend,
 )
 
 import numpy as np
 import torch
-from ..models.combined import Combined, Combined_inner_BPDA_identity, Combined_inner_BPDA_gaussianblur
+from ..models.combined import Combined, Combined_inner_BPDA_identity
 
 from ..utils.read_datasets import(
     cifar10,
@@ -31,42 +31,25 @@ def main():
 
     args = get_arguments()
 
-    use_cuda = not args.no_cuda and torch.cuda.is_available()
+    use_cuda = args.use_gpu and torch.cuda.is_available()
     device = torch.device("cuda" if use_cuda else "cpu")
 
     classifier = get_classifier(args)
 
-    if args.no_autoencoder:
+    if args.neural_net.no_frontend:
         model = classifier
 
     else:
-        autoencoder = get_autoencoder(args)
+        frontend = get_frontend(args)
 
-        if args.attack_box_type == "white" and args.attack_whitebox_type == "W-AIGA":
-            model = Combined_inner_BPDA_identity(autoencoder, classifier)
-        elif args.attack_box_type == "white" and args.attack_whitebox_type == "W-AGGA":
-            model = Combined_inner_BPDA_gaussianblur(
-                autoencoder, classifier, args)
-        else:
-            if (
-                args.attack_box_type == "white"
-                and args.attack_whitebox_type == "top_T_dropout_identity"
-            ):
-                autoencoder.set_BPDA_type("identity")
+        if args.adv_testing.box_type == "white":
+            if args.adv_testing.backward == "top_T_dropout_identity":
+                frontend.set_BPDA_type("identity")
 
-            elif (
-                args.attack_box_type == "white"
-                and args.attack_whitebox_type == "top_T_top_U"
-            ):
-                autoencoder.set_BPDA_type("top_U")
+            elif args.adv_testing.backward == "top_T_top_U":
+                frontend.set_BPDA_type("top_U")
 
-            elif (
-                args.attack_box_type == "white"
-                and args.attack_whitebox_type == "W-NFGA"
-            ):
-                autoencoder.set_BPDA_type("maxpool_like")
-
-            model = Combined(autoencoder, classifier)
+        model = Combined(frontend, classifier)
 
         model = model.to(device)
         model.eval()
@@ -89,11 +72,11 @@ def main():
         p.requires_grad = False
 
     # this is just for the adversarial test below
-    if args.dataset == "CIFAR10":
+    if args.dataset.name == "CIFAR10":
         _, test_loader = cifar10(args)
-    elif args.dataset == "Tiny-ImageNet":
+    elif args.dataset.name == "Tiny-ImageNet":
         _, test_loader = tiny_imagenet(args)
-    elif args.dataset == "Imagenette":
+    elif args.dataset.name == "Imagenette":
         _, test_loader = imagenette(args)
     else:
         raise NotImplementedError
@@ -101,14 +84,14 @@ def main():
     data_params = {"x_min": 0.0, "x_max": 1.0}
 
     attack_params = {
-        "norm": args.attack_norm,
-        "eps": args.attack_epsilon,
+        "norm": args.adv_testing.norm,
+        "eps": args.adv_testing.budget,
         "alpha": args.attack_alpha,
-        "step_size": args.attack_step_size,
-        "num_steps": args.attack_num_steps,
-        "random_start": (args.adv_training_rand and args.adv_training_num_restarts > 1),
-        "num_restarts": args.attack_num_restarts,
-        "EOT_size": args.attack_EOT_size,
+        "step_size": args.adv_testing.step_size,
+        "num_steps": args.adv_testing.nb_steps,
+        "random_start": (args.adv_testing.rand and args.adv_training.nb_restarts > 1),
+        "num_restarts": args.adv_testing.nb_restarts,
+        "EOT_size": args.adv_testing.EOT_size,
     }
 
     loss_landscape(

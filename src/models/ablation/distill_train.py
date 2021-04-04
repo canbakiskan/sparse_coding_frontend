@@ -1,6 +1,6 @@
 import time
 import sys
-from ..autoencoder import autoencoder_class
+from ..frontend import frontend_class
 from deepillusion.torchdefenses import adversarial_epoch, adversarial_test
 from deepillusion.torchattacks import (
     PGD,
@@ -10,11 +10,11 @@ from deepillusion.torchattacks import (
     PGD_EOT_normalized,
     PGD_EOT_sign,
 )
-from ...utils.get_modules import get_autoencoder
+from ...utils.get_modules import get_frontend
 from ..combined import Combined
 from ...utils.namers import (
-    autoencoder_ckpt_namer,
-    autoencoder_log_namer,
+    frontend_ckpt_namer,
+    frontend_log_namer,
     classifier_ckpt_namer,
     classifier_log_namer,
     distillation_ckpt_namer
@@ -41,9 +41,9 @@ from ...utils.namers import (
 )
 from ...utils.get_modules import (
     get_classifier,
-    get_autoencoder,
+    get_frontend,
 )
-from ..combined import Combined, Combined_inner_BPDA_identity, Combined_inner_BPDA_gaussianblur
+from ..combined import Combined, Combined_inner_BPDA_identity
 
 
 def cross_entropy(input, target, size_average=True):
@@ -126,45 +126,27 @@ def main():
     torch.manual_seed(args.seed)
     torch.cuda.manual_seed(args.seed)
 
-    use_cuda = not args.no_cuda and torch.cuda.is_available()
+    use_cuda = args.use_gpu and torch.cuda.is_available()
     device = torch.device("cuda" if use_cuda else "cpu")
 
     # TEACHER MODEL
 
     teacher_classifier = get_classifier(args)
 
-    if args.no_autoencoder:
+    if args.neural_net.no_frontend:
         teacher_model = teacher_classifier
 
     else:
-        teacher_autoencoder = get_autoencoder(args)
+        teacher_frontend = get_frontend(args)
 
-        if args.attack_box_type == "white" and args.attack_whitebox_type == "W-AIGA":
-            teacher_model = Combined_inner_BPDA_identity(
-                teacher_autoencoder, teacher_classifier)
-        elif args.attack_box_type == "white" and args.attack_whitebox_type == "W-AGGA":
-            teacher_model = Combined_inner_BPDA_gaussianblur(
-                teacher_autoencoder, teacher_classifier, args)
-        else:
-            if (
-                args.attack_box_type == "white"
-                and args.attack_whitebox_type == "top_T_dropout_identity"
-            ):
-                teacher_autoencoder.set_BPDA_type("identity")
+        if args.adv_testing.box_type == "white":
+            if args.adv_testing.backward == "top_T_dropout_identity":
+                teacher_frontend.set_BPDA_type("identity")
 
-            elif (
-                args.attack_box_type == "white"
-                and args.attack_whitebox_type == "top_T_top_U"
-            ):
-                teacher_autoencoder.set_BPDA_type("top_U")
+            elif args.adv_testing.backward == "top_T_top_U":
+                teacher_frontend.set_BPDA_type("top_U")
 
-            elif (
-                args.attack_box_type == "white"
-                and args.attack_whitebox_type == "W-NFGA"
-            ):
-                teacher_autoencoder.set_BPDA_type("maxpool_like")
-
-            teacher_model = Combined(teacher_autoencoder, teacher_classifier)
+            teacher_model = Combined(teacher_frontend, teacher_classifier)
 
         teacher_model = teacher_model.to(device)
         teacher_model.eval()
@@ -194,25 +176,26 @@ def main():
 
     train_loader, test_loader = read_dataset(args)
 
-    if args.classifier_arch == "resnet":
-        classifier = ResNet(num_outputs=args.num_classes).to(device)
-    elif args.classifier_arch == "resnetwide":
-        classifier = ResNetWide(num_outputs=args.num_classes).to(device)
-    elif args.classifier_arch == "efficientnet":
+    if args.neural_net.classifier_arch == "resnet":
+        classifier = ResNet(num_outputs=args.dataset.nb_classes).to(device)
+    elif args.neural_net.classifier_arch == "resnetwide":
+        classifier = ResNetWide(num_outputs=args.dataset.nb_classes).to(device)
+    elif args.neural_net.classifier_arch == "efficientnet":
         classifier = EfficientNet.from_name(
-            "efficientnet-b0", num_classes=args.num_classes, dropout_rate=0.2
+            "efficientnet-b0", num_classes=args.dataset.nb_classes, dropout_rate=0.2
         ).to(device)
-    elif args.classifier_arch == "preact_resnet":
-        classifier = PreActResNet101(num_classes=args.num_classes).to(device)
-    elif args.classifier_arch == "dropout_resnet":
+    elif args.neural_net.classifier_arch == "preact_resnet":
+        classifier = PreActResNet101(
+            num_classes=args.dataset.nb_classes).to(device)
+    elif args.neural_net.classifier_arch == "dropout_resnet":
         classifier = dropout_ResNet(
-            dropout_p=args.dropout_p,
-            nb_filters=args.dict_nbatoms,
-            num_outputs=args.num_classes,
+            dropout_p=args.defense.dropout_p,
+            nb_filters=args.dictionary.nb_atoms,
+            num_outputs=args.dataset.nb_classes,
         ).to(device)
-    elif args.classifier_arch == "resnet_after_encoder":
+    elif args.neural_net.classifier_arch == "resnet_after_encoder":
         classifier = ResNet_after_encoder(
-            nb_filters=args.dict_nbatoms, num_outputs=args.num_classes).to(device)
+            nb_filters=args.dictionary.nb_atoms, num_outputs=args.dataset.nb_classes).to(device)
     else:
         raise NotImplementedError
 
@@ -235,10 +218,10 @@ def main():
     logger.info("Epoch \t Seconds \t LR \t \t Train Loss \t Train Acc")
 
     logger.info("Standard training")
-    for epoch in tqdm(range(1, args.classifier_epochs + 1)):
+    for epoch in tqdm(range(1, args.neural_net.nb_epochs + 1)):
         start_time = time.time()
 
-        train_loss, train_acc = teacher_epoch(model, teacher_ensemble_model, train_loader, optimizer,
+        train_loss, train_acc = teacher_epoch(model, teacher_model, train_loader, optimizer,
                                               scheduler=scheduler)
         test_loss, test_acc = test(model, test_loader)
 
@@ -252,7 +235,7 @@ def main():
             f"Test  \t loss: {test_loss:.4f} \t acc: {test_acc:.4f}")
 
     # Save model parameters
-    if args.save_checkpoint:
+    if args.neural_net.save_checkpoint:
         if not os.path.exists(os.dirname(distillation_ckpt_namer(args))):
             os.makedirs(os.dirname(distillation_ckpt_namer(args)))
 

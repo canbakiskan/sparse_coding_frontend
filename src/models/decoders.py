@@ -13,9 +13,9 @@ class default_decoder(nn.Module):
     def __init__(self, args):
 
         super(default_decoder, self).__init__()
-        self.image_size = args.image_shape[0]
+        self.image_size = args.dataset.img_shape[0]
         self.conv1 = nn.ConvTranspose2d(
-            args.dict_nbatoms, 300, kernel_size=4, stride=2, padding=0, bias=True
+            args.dictionary.nb_atoms, 300, kernel_size=4, stride=2, padding=0, bias=True
         )
         self.conv2 = nn.ConvTranspose2d(
             300, 100, kernel_size=3, stride=1, padding=0, bias=True
@@ -36,9 +36,9 @@ class small_decoder(nn.Module):
     def __init__(self, args):
 
         super(small_decoder, self).__init__()
-        self.image_size = args.image_shape[0]
+        self.image_size = args.dataset.img_shape[0]
         self.conv1 = nn.ConvTranspose2d(
-            args.dict_nbatoms, 30, kernel_size=4, stride=2, padding=0, bias=True
+            args.dictionary.nb_atoms, 30, kernel_size=4, stride=2, padding=0, bias=True
         )
         self.conv2 = nn.ConvTranspose2d(
             30, 10, kernel_size=3, stride=1, padding=0, bias=True
@@ -59,9 +59,9 @@ class deep_decoder(nn.Module):
     def __init__(self, args):
 
         super(deep_decoder, self).__init__()
-        self.image_size = args.image_shape[0]
+        self.image_size = args.dataset.img_shape[0]
         self.conv1 = nn.ConvTranspose2d(
-            args.dict_nbatoms, 300, kernel_size=4, stride=2, padding=0, bias=True
+            args.dictionary.nb_atoms, 300, kernel_size=4, stride=2, padding=0, bias=True
         )
         self.conv2 = nn.ConvTranspose2d(
             300, 100, kernel_size=3, stride=1, padding=0, bias=True
@@ -91,9 +91,9 @@ class resize_decoder(nn.Module):
     def __init__(self, args):
 
         super(resize_decoder, self).__init__()
-        self.image_size = args.image_shape[0]
+        self.image_size = args.dataset.img_shape[0]
         self.conv1 = nn.ConvTranspose2d(
-            args.dict_nbatoms, 300, kernel_size=3, stride=1, padding=0, bias=True
+            args.dictionary.nb_atoms, 300, kernel_size=3, stride=1, padding=0, bias=True
         )
 
         self.conv2 = nn.ConvTranspose2d(

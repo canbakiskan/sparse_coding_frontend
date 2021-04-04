@@ -10,7 +10,7 @@ def main():
 
     args = get_arguments()
 
-    (H, W, C) = args.defense_patchshape
+    (H, W, C) = args.defense.patch_shape
 
     dcts = np.zeros((H, W, C, H, W, C))
 
@@ -47,7 +47,7 @@ def main():
             for k in range(C):
                 plt.subplot(H, W*C, W*C*i+W*k+j+1)
                 plt.imshow(
-                    dcts[W*C*i+C*j+k, :].reshape(*args.defense_patchshape))
+                    dcts[W*C*i+C*j+k, :].reshape(*args.defense.patch_shape))
                 plt.yticks([])
                 plt.xticks([])
 

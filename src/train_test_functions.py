@@ -42,8 +42,8 @@ def train(model, train_loader, optimizer, scheduler=None):
     return train_loss / train_size, train_correct / train_size
 
 
-def train_autoencoder_unsupervised(model, train_loader, optimizer, scheduler=None):
-    """ Train given autoencoder with train_loader and optimizer """
+def train_frontend_unsupervised(model, train_loader, optimizer, scheduler=None):
+    """ Train given frontend with train_loader and optimizer """
 
     model.train()
 
@@ -119,7 +119,7 @@ def test(model, test_loader):
     return test_loss / test_size, test_correct / test_size
 
 
-def test_autoencoder_unsupervised(model, test_loader):
+def test_frontend_unsupervised(model, test_loader):
 
     model.eval()
 
