@@ -1,21 +1,8 @@
-import torch
-import torch.optim as optim
-import torch.backends.cudnn as cudnn
-
-import os
 import numpy as np
-import logging
 
-from .train_test_functions import (
-    train_autoencoder_unsupervised,
-    test_autoencoder_unsupervised,
-)
 from .parameters import get_arguments
 from .utils.read_datasets import read_dataset
-from .models.encoders import encoder_base_class
-from tqdm import tqdm
-from .utils.namers import autoencoder_ckpt_namer, autoencoder_log_namer
-from torchvision import datasets, transforms
+from .models.encoder import encoder_base_class
 
 import matplotlib.pyplot as plt
 
@@ -35,26 +22,26 @@ def main():
 
         plt.hist(
             inner_products[
-                np.random.choice(args.train_batch_size),
+                np.random.choice(args.neural_net.train_batch_size),
                 :,
                 np.random.choice(
                     int(
-                        (args.image_shape[0] - args.defense_patchsize)
-                        / args.defense_stride
+                        (args.dataset.img_shape[0] - args.defense.patch_size)
+                        / args.defense.stride
                         + 1
                     )
                 ),
                 np.random.choice(
                     int(
-                        (args.image_shape[0] - args.defense_patchsize)
-                        / args.defense_stride
+                        (args.dataset.img_shape[0] - args.defense.patch_size)
+                        / args.defense.stride
                         + 1
                     )
                 ),
             ],
             50,
         )
-        plt.savefig(f"hist_{args.dict_type}_{batch_idx}.pdf")
+        plt.savefig(f"hist_{args.dictionary.type}_{batch_idx}.pdf")
         plt.close()
         if batch_idx == 9:
             break
