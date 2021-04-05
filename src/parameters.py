@@ -56,6 +56,32 @@ def get_arguments():
         help="Number of epochs in training",
     )
 
+    # Adversarial training parameters
+    adv_training = parser.add_argument_group(
+        "adv_training", "Adversarial training related config"
+    )
+
+    adv_training.add_argument(
+        "-tra",
+        "--adv_training_method",
+        type=str,
+        default=None,
+        choices=[
+            "TRADES",
+            "FGSM",
+            "RFGSM",
+            "PGD",
+            "PGD_EOT",
+            "PGD_EOT_normalized",
+            "PGD_EOT_sign",
+            "CWlinf_EOT",
+            "CWlinf_EOT_normalized",
+            "CWlinf",
+        ],
+        metavar="fgsm/pgd",
+        help="Attack method",
+    )
+
     # Adversarial testing parameters
     adv_testing = parser.add_argument_group(
         "adv_testing", "Adversarial testing related config"

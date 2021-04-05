@@ -54,7 +54,6 @@ save_checkpoint = true
         lr_max = 0.02 # max LR for cyclic scheduler
 
 [adv_training]
-method = "PGD" # TRADES, FGSM, RFGSM, PGD, PGD_EOT, PGD_EOT_normalized, PGD_EOT_sign, CWlinf_EOT, CWlinf_EOT_normalized, CWlinf
 norm = "inf" # inf or a positive integer
 budget = 0.03137254901 # attack budget (default: 8/255)
 step_size = 0.00392156862 # (default: 0.00392156862)
