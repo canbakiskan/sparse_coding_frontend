@@ -145,9 +145,11 @@ def attack_params_string(args):
         if "RFGSM" in args.adv_testing.method:
             attack_params_string += f"_a_{np.int(np.round(args.adv_testing.rfgsm_alpha*255))}"
 
-            attack_params_string += f"_steep_{args.adv_testing.activation_backward_steepness:.1f}"
-        if args.adv_testing.backward == "top_T_top_U":
+        if args.adv_testing.top_T_backward == "top_U":
             attack_params_string += f"_U_{args.adv_testing.top_U}"
+
+        if args.adv_testing.activation_backward_steepness != 0.0:
+            attack_params_string += f"_steep_{args.adv_testing.activation_backward_steepness:.1f}"
 
     return attack_params_string
 
