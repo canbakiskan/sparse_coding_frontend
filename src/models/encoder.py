@@ -96,11 +96,11 @@ class encoder(nn.Module, noisy):
                 from .bpda import top_T_backward_top_U
                 self.top_T = top_T_backward_top_U().apply
                 self.U = args.adv_testing.top_U
-            elif self.top_T_backward == "identity":
+            elif self.top_T_backward == "default":
                 from .bpda import top_T_backward_identity
                 self.top_T = top_T_backward_identity().apply
             else:
-                self.top_T = top_T
+                ValueError
 
         if "dropout" in self.frontend_arch:
             self.p = args.defense.dropout_p
@@ -117,17 +117,15 @@ class encoder(nn.Module, noisy):
                           args.defense.assumed_budget)
             self.set_l1_norms(self.conv.weight.data.permute(
                 0, 2, 3, 1).reshape(args.dictionary.nb_atoms, -1).t())
-            self.activation_backward = args.defense.attack_activation_backward
+            self.activation_backward_steepness = args.adv_testing.activation_backward_steepness
 
-            if self.activation_backward == "identity":
+            if self.activation_backward_steepness == 0.0:
                 from .bpda import activation_backward_identity
                 self.activation = activation_backward_identity().apply
-            elif self.activation_backward == "smooth":
+            else:
                 from .bpda import activation_backward_smooth
                 self.activation = activation_backward_smooth(
                     args.adv_testing.activation_backward_steepness).apply
-            else:
-                self.activation = dropout
 
     def __getattr__(self, key):
         if key == "dictionary":

@@ -39,8 +39,12 @@ class frontend_class(nn.Module):
             or key == "T"
             or key == "p"
             or key == "l1_norms"
-            or key == "set_BPDA_type"
-            or key == "fix_seed"
+            or key == "seed"
+            or key == "frontend_arch"
+            or key == "top_T_backward"
+            or key == "dropout_backward"
+            or key == "activation_backward"
+
         ):
             return getattr(self.encoder, key)
         else:

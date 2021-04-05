@@ -18,7 +18,7 @@ def get_arguments():
     else:
         import pathlib
 
-        directory = str(pathlib.Path().absolute())
+        directory = path.dirname(path.abspath(__file__))
         if "src" in directory:
             directory = directory.replace("src", "")
 
@@ -137,7 +137,7 @@ def get_arguments():
         "--attack_top_T_backward",
         type=str,
         default="top_U",
-        choices=["default", "top_U", "identity"],
+        choices=["default", "top_U"],
         metavar="",
         help="Top T operation backward pass type",
     )
@@ -150,19 +150,11 @@ def get_arguments():
         help="Dropout operation backward pass type",
     )
     adv_testing.add_argument(
-        "--attack_activation_backward",
-        type=str,
-        default="smooth",
-        choices=["default", "smooth", "identity"],
-        metavar="",
-        help="backward pass type",
-    )
-    adv_testing.add_argument(
         "--attack_activation_backward_steepness",
         type=float,
         default=4.0,
         metavar="",
-        help="Steepness of smooth backward pass approximation to activation function. 0.0 means identity. (default: 0.0)",
+        help="Steepness of smooth backward pass approximation to activation function. 0.0 means identity backward pass. (default: 4.0)",
     )
     adv_testing.add_argument(
         "--attack_top_U",
@@ -293,7 +285,13 @@ def get_arguments():
     config = json.loads(json.dumps(config),
                         object_hook=lambda d: SimpleNamespace(**d))
 
+    config.directory = args.directory
+
     for arg, val in args.__dict__.items():
+        if "neural_net" in arg:
+            setattr(config.neural_net, arg.replace("neural_net_", ""), val)
+        if "adv_training" in arg:
+            setattr(config.adv_training, arg.replace("adv_training_", ""), val)
         if "attack_" in arg:
             setattr(config.adv_testing, arg.replace("attack_", ""), val)
         if "defense_" in arg:
@@ -309,7 +307,7 @@ def get_arguments():
     config.defense.patch_shape = (
         config.defense.patch_size, config.defense.patch_size, 3)
 
-    if config.neural_net.optimizer.lr_scheduler == "cyclic" and config.neural_net.optimizer.name != "sgd":
+    if config.neural_net.optimizer.lr_scheduler == "cyc" and config.neural_net.optimizer.name != "sgd":
         raise AssertionError("Cyclic learning rate can only be used with SGD.")
 
     if config.dictionary.type == "dct":
