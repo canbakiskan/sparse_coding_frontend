@@ -183,7 +183,7 @@ def main():
     attack_params = {
         "norm": args.adv_testing.norm,
         "eps": args.adv_testing.budget,
-        "alpha": args.attack_alpha,
+        "alpha": args.adv_testing.rfgsm_alpha,
         "step_size": args.adv_testing.step_size,
         "num_steps": args.adv_testing.nb_steps,
         "random_start": (args.adv_testing.rand and args.adv_training.nb_restarts > 1),
@@ -245,7 +245,7 @@ def main():
 
     start = time.time()
 
-    if args.adv_testing.box_type == "other" and (args.otherbox_type == "boundary" or args.otherbox_type == "hopskip"):
+    if args.adv_testing.box_type == "other" and (args.adv_testing.otherbox_type == "boundary" or args.adv_testing.otherbox_type == "hopskip") and not read_from_file:
         img_distances_idx = np.load(
             f'./data/image_distances/{args.dataset.name}/closest_img_indices.npy')
         preds = torch.zeros(10000, dtype=torch.int)
@@ -280,10 +280,10 @@ def main():
         data = data.to(device)
         target = target.to(device)
 
-        if args.adv_testing.box_type == "other" and (args.otherbox_type == "boundary" or args.otherbox_type == "hopskip"):
-            adversarial_args['attack_args']['starting_points'] = closest_images[batch_idx
-                                                                                * args.neural_net.test_batch_size: (batch_idx + 1)
-                                                                                * args.neural_net.test_batch_size].to(device)
+            if args.adv_testing.box_type == "other" and (args.adv_testing.otherbox_type == "boundary" or args.adv_testing.otherbox_type == "hopskip"):
+                adversarial_args['attack_args']['starting_points'] = closest_images[batch_idx
+                                                                                    * args.neural_net.test_batch_size: (batch_idx + 1)
+                                                                                    * args.neural_net.test_batch_size].to(device)
 
         if not read_from_file:
             attack_batch = generate_attack(

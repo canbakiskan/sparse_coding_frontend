@@ -152,7 +152,7 @@ Run the corresponding bash script in `shell_scripts/ablation` to reproduce.
 |save|`config.toml`|true|bool||
 |skip_clean|`config.toml`|false|bool||
 |step_size|`parameters.py`|0.00392156862745098|float||
-|top_T_backward|`parameters.py`|"default", "top_U", "identity"||
+|top_T_backward|`parameters.py`|"top_U"|"default", "top_U"||
 |top_U|`parameters.py`|30|int||
 |transfer_file|`parameters.py`|None|filepath||
 

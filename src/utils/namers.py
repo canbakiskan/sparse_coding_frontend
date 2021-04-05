@@ -1,4 +1,3 @@
-import torch
 import os
 import numpy as np
 
@@ -37,7 +36,7 @@ def frontend_params_string(args):
 
     frontend_params_string += f"_{args.defense.frontend_arch}"
 
-    frontend_params_string += f"_{args.optimizer.name}"
+    frontend_params_string += f"_{args.neural_net.optimizer.name}"
 
     frontend_params_string += f"_{args.neural_net.optimizer.lr_scheduler}"
 
@@ -95,7 +94,7 @@ def adv_training_params_string(args):
 def classifier_params_string(args):
     classifier_params_string = args.neural_net.classifier_arch
 
-    classifier_params_string += f"_{args.optimizer.name}"
+    classifier_params_string += f"_{args.neural_net.optimizer.name}"
 
     classifier_params_string += f"_{args.neural_net.optimizer.lr_scheduler}"
 
@@ -144,8 +143,8 @@ def attack_params_string(args):
             attack_params_string += f"_ss_{np.int(np.round(args.adv_testing.step_size*255))}"
             attack_params_string += f"_Nr_{args.adv_testing.nb_restarts}"
         if "RFGSM" in args.adv_testing.method:
-            attack_params_string += f"_a_{np.int(np.round(args.attack_alpha*255))}"
-        if args.adv_testing.whitebox_type == "full" and args.adv_testing.activation_backward_steepness != 0.0:
+            attack_params_string += f"_a_{np.int(np.round(args.adv_testing.rfgsm_alpha*255))}"
+
             attack_params_string += f"_steep_{args.adv_testing.activation_backward_steepness:.1f}"
         if args.adv_testing.backward == "top_T_top_U":
             attack_params_string += f"_U_{args.adv_testing.top_U}"

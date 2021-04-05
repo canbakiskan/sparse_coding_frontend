@@ -89,7 +89,7 @@ class encoder(nn.Module, noisy):
 
         if "top_T" in self.frontend_arch:
             self.T = args.defense.top_T
-            self.top_T_backward = args.defense.attack_top_T_backward
+            self.top_T_backward = args.adv_testing.top_T_backward
 
             if self.top_T_backward == "top_U":
                 from .bpda import top_T_backward_top_U
@@ -103,7 +103,7 @@ class encoder(nn.Module, noisy):
 
         if "dropout" in self.frontend_arch:
             self.p = args.defense.dropout_p
-            self.dropout_backward = args.defense.attack_dropout_backward
+            self.dropout_backward = args.adv_testing.dropout_backward
 
             if self.dropout_backward == "identity":
                 from .bpda import dropout_backward_identity

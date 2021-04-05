@@ -208,7 +208,7 @@ def main():
     attack_params = {
         "norm": args.adv_testing.norm,
         "eps": args.adv_testing.budget,
-        "alpha": args.attack_alpha,
+        "alpha": args.adv_testing.rfgsm_alpha,
         "step_size": args.adv_testing.step_size,
         "num_steps": args.adv_testing.nb_steps,
         "random_start": (args.adv_testing.rand and args.adv_training.nb_restarts > 1),
