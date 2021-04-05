@@ -41,7 +41,7 @@ def frontend_params_string(args):
 
     frontend_params_string += f"_{args.neural_net.optimizer.lr_scheduler}"
 
-    if args.neural_net.optimizer.lr_scheduler == "cyclic":
+    if args.neural_net.optimizer.lr_scheduler == "cyc":
         frontend_params_string += f"_{args.neural_net.optimizer.cyclic.lr_max:.4f}"
     else:
         frontend_params_string += f"_{args.neural_net.optimizer.lr:.4f}"
@@ -99,7 +99,7 @@ def classifier_params_string(args):
 
     classifier_params_string += f"_{args.neural_net.optimizer.lr_scheduler}"
 
-    if args.neural_net.optimizer.lr_scheduler == "cyclic":
+    if args.neural_net.optimizer.lr_scheduler == "cyc":
         classifier_params_string += f"_{args.neural_net.optimizer.cyclic.lr_max:.4f}"
     else:
         classifier_params_string += f"_{args.neural_net.optimizer.lr:.4f}"

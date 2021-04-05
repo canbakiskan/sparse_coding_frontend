@@ -3,14 +3,14 @@ import torch.optim as optim
 
 def get_optimizer_scheduler(args, model, batches_per_epoch):
 
-    if args.optimizer.name == "sgd":
+    if args.neural_net.optimizer.name == "sgd":
         optimizer = optim.SGD(
             model.parameters(),
             lr=args.neural_net.optimizer.lr,
             momentum=args.neural_net.optimizer.momentum,
             weight_decay=args.neural_net.optimizer.weight_decay,
         )
-    elif args.optimizer.name == "rmsprop":
+    elif args.neural_net.optimizer.name == "rms":
         optimizer = optim.RMSprop(
             model.parameters(),
             lr=args.neural_net.optimizer.lr,
@@ -18,14 +18,14 @@ def get_optimizer_scheduler(args, model, batches_per_epoch):
             momentum=args.neural_net.optimizer.momentum,
         )
 
-    elif args.optimizer.name == "adam":
+    elif args.neural_net.optimizer.name == "adam":
         optimizer = optim.Adam(
             model.parameters(), lr=args.neural_net.optimizer.lr, weight_decay=args.neural_net.optimizer.weight_decay
         )
     else:
         raise NotImplementedError
 
-    if args.neural_net.optimizer.lr_scheduler == "cyclic":
+    if args.neural_net.optimizer.lr_scheduler == "cyc":
         lr_steps = args.neural_net.epochs * batches_per_epoch
         scheduler = optim.lr_scheduler.CyclicLR(
             optimizer,
@@ -39,7 +39,7 @@ def get_optimizer_scheduler(args, model, batches_per_epoch):
             optimizer, milestones=[35], gamma=0.1
         )
 
-    elif args.neural_net.optimizer.lr_scheduler == "multiplicative":
+    elif args.neural_net.optimizer.lr_scheduler == "mult":
 
         def lr_fun(epoch):
             if epoch % 3 == 0:

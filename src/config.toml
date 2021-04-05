@@ -43,8 +43,8 @@ classifier_arch = "resnet" # resnet, resnetwide, efficientnet, preact_resnet, dr
 save_checkpoint = true
 
     [neural_net.optimizer]
-    name = "sgd" # sgd, adam, rmsprop
-    lr_scheduler = "cyclic" # cylic, multiplicative, step
+    name = "sgd" # sgd, adam, rms
+    lr_scheduler = "cyc" # cyc, mult, step
     momentum = 0.9 # for optimizers with momentum
     weight_decay = 0.0005
     lr = 0.001 # starting lr except for cyclic scheduler

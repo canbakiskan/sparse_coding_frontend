@@ -107,9 +107,9 @@ Run the corresponding bash script in `shell_scripts/ablation` to reproduce.
 |epochs|`parameters.py`|70|int||
 |no_frontend|`parameters.py`|false|bool||
 |optimizer.lr|`config.toml`|0.001|float||
-|optimizer.lr_scheduler|`config.toml`|"cyclic"|
+|optimizer.lr_scheduler|`config.toml`|"cyc"|"cyc","mult","step"||
 |optimizer.momentum|`config.toml`|0.9|float||
-|optimizer.name|`config.toml`|"sgd"|"sgd","adam","rmsprop"||
+|optimizer.name|`config.toml`|"sgd"|"sgd","adam","rms"||
 |optimizer.weight_decay|`config.toml`|0.0005|float||
 |optimizer.cyclic.lr_max|`config.toml`|0.02|float||
 |optimizer.cyclic.lr_min|`config.toml`|0.0|float||
@@ -123,7 +123,7 @@ Run the corresponding bash script in `shell_scripts/ablation` to reproduce.
 |--|--|--|--|--|
 |budget|`config.toml`|0.03137254901|float||
 |EOT_size|`config.toml`|10|int||
-|method|`config.toml`|"PGD"|PGD_EOT","PGD_smooth","FGSM","RFGSM","PGD","PGD_EOT","PGD_EOT_normalized","PGD_EOT_sign","CWlinf_EOT",            "CWlinf_EOT_normalized","CWlinf"||
+|method|`parameters.py`|"PGD"|PGD_EOT","PGD_smooth","FGSM","RFGSM","PGD","PGD_EOT","PGD_EOT_normalized","PGD_EOT_sign","CWlinf_EOT",            "CWlinf_EOT_normalized","CWlinf"||
 |nb_restarts|`config.toml`|1|int||
 |nb_steps|`config.toml`|10|int||
 |norm|`config.toml`|"inf"|"inf",int||
@@ -134,7 +134,7 @@ Run the corresponding bash script in `shell_scripts/ablation` to reproduce.
 ### Adversarial Testing (Attack) Related Settings/Hyperparameters
 |Setting|Where|Default|Choices|Help|
 |--|--|--|--|--|
-|activation_backward|`parameters.py`|"smooth"|"smooth","default","identity"||
+|activation_backward|`parameters.py`|"smooth"|"smooth","identity"||
 |activation_backward_steepness|`parameters.py`|4.0|float||
 |box_type|`parameters.py`|"white"|"white","other"||
 |budget|`parameters.py`|0.03137254901960784|float||

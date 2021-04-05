@@ -1,6 +1,7 @@
 # these settings enable LaTeX in matplotlib and make the figures pretty
 
 
+from matplotlib import rc
 import matplotlib.pyplot as plt
 from matplotlib import rcParams
 from matplotlib.ticker import MultipleLocator, FormatStrFormatter, AutoMinorLocator
@@ -32,7 +33,6 @@ green = "#61ba86"
 rcParams["lines.linewidth"] = 1.25
 
 # Latex related settings
-from matplotlib import rc
 
 rc("text", usetex=True)
 rc(
