@@ -66,7 +66,7 @@ class activation_backward_smooth(torch.autograd.Function):
         """
         Use this if you want an approximation of the activation 
         function in the backward pass. Uses the derivative of 
-        0.5*(tanh(bpda_steepness*(x-jump))+tanh(bpda_steepness*(x+jump)))
+        0.5*(tanh(backward_steepness*(x-jump))+tanh(backward_steepness*(x+jump)))
         """
         x, jump = ctx.saved_tensors
         grad_input = None

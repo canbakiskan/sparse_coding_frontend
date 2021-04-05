@@ -1,4 +1,4 @@
-from .encoder import *
+from .encoder import encoder
 from .decoders import *
 
 from .ablation.sparse_frontend import sparse_frontend

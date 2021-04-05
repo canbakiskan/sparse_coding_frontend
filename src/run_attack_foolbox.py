@@ -26,8 +26,7 @@ from deepillusion.torchattacks import (
     PGD_EOT_sign,
     PGD_smooth,
 )
-from .models.combined import Combined, Combined_inner_BPDA_identity
-import torch.nn.functional as F
+from .models.combined import Combined
 import torch
 import numpy as np
 from .utils.get_modules import (
@@ -64,8 +63,8 @@ def main():
         if response != "y":
             recompute = False
 
-    if not os.path.exists(os.dirname(attack_log_namer(args))):
-        os.makedirs(os.dirname(attack_log_namer(args)))
+    if not os.path.exists(os.path.dirname(attack_log_namer(args))):
+        os.makedirs(os.path.dirname(attack_log_namer(args)))
 
     logging.basicConfig(
         format="[%(asctime)s] - %(message)s",

@@ -1,4 +1,4 @@
-from ..resnet import ResNet, ResidualUnit
+from ..resnet import ResNet
 from torch import nn
 import torch.nn.functional as F
 

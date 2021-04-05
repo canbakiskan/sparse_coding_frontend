@@ -1,7 +1,7 @@
 from .parameters import get_arguments
 from .utils.namers import dict_file_namer
 import numpy as np
-from scipy.fftpack import dct, idct
+from scipy.fftpack import dct
 import matplotlib.pyplot as plt
 import os
 
@@ -35,8 +35,8 @@ def main():
 
     dict_filepath = dict_file_namer(args)
 
-    if not os.path.exists(os.dirname(dict_filepath)):
-        os.makedirs(os.dirname(dict_filepath))
+    if not os.path.exists(os.path.dirname(dict_filepath)):
+        os.makedirs(os.path.dirname(dict_filepath))
 
     np.savez(dict_filepath, dict=dcts)
 

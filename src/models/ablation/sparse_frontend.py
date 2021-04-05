@@ -1,6 +1,6 @@
 from torch import nn
 import torch.nn.functional as F
-from ..encoder import take_top_T
+from ..encoder import top_T
 from ..decoders import take_middle_of_img
 
 

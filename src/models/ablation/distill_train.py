@@ -35,15 +35,11 @@ import numpy as np
 from tqdm import tqdm
 import os
 import torch
-from ...utils.namers import (
-    attack_log_namer,
-    attack_file_namer,
-)
 from ...utils.get_modules import (
     get_classifier,
     get_frontend,
 )
-from ..combined import Combined, Combined_inner_BPDA_identity
+from ..combined import Combined
 
 
 def cross_entropy(input, target, size_average=True):
@@ -106,8 +102,8 @@ def main():
     """ main function to run the experiments """
 
     args = get_arguments()
-    if not os.path.exists(os.dirname(classifier_log_namer(args))):
-        os.makedirs(os.dirname(classifier_log_namer(args)))
+    if not os.path.exists(os.path.dirname(classifier_log_namer(args))):
+        os.makedirs(os.path.dirname(classifier_log_namer(args)))
 
     logging.basicConfig(
         format="[%(asctime)s] - %(message)s",
@@ -223,8 +219,8 @@ def main():
 
     # Save model parameters
     if args.neural_net.save_checkpoint:
-        if not os.path.exists(os.dirname(distillation_ckpt_namer(args))):
-            os.makedirs(os.dirname(distillation_ckpt_namer(args)))
+        if not os.path.exists(os.path.dirname(distillation_ckpt_namer(args))):
+            os.makedirs(os.path.dirname(distillation_ckpt_namer(args)))
 
         distillation_filepath = distillation_ckpt_namer(args)
         torch.save(classifier.state_dict(), distillation_filepath)

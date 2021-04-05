@@ -3,8 +3,6 @@
 import numpy as np
 from time import time
 from sklearn.decomposition import MiniBatchDictionaryLearning
-from torchvision.datasets import CIFAR10
-from argparse import ArgumentParser
 from os import path
 from .utils.namers import dict_file_namer, dict_params_string
 from .utils.get_modules import get_dictionary
@@ -194,8 +192,8 @@ def main():
         dt = time() - t0
         print("done in %.2fs." % dt)
 
-        if not os.path.exists(os.dirname(dict_filepath)):
-            os.makedirs(os.dirname(dict_filepath))
+        if not os.path.exists(os.path.dirname(dict_filepath)):
+            os.makedirs(os.path.dirname(dict_filepath))
 
         np.savez(dict_filepath, dict=dico.components_,
                  params=dico.get_params())

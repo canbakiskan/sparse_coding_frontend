@@ -14,7 +14,7 @@ from ...utils.get_modules import (
 import numpy as np
 import torch
 import torch.nn.functional as F
-from ..combined import Combined, Combined_inner_BPDA_identity
+from ..combined import Combined,
 from deepillusion.torchattacks import (
     PGD,
     PGD_EOT,
@@ -108,8 +108,8 @@ def main():
         if response != "y":
             recompute = False
 
-    if not os.path.exists(os.dirname(attack_log_namer(args))):
-        os.makedirs(os.dirname(attack_log_namer(args)))
+    if not os.path.exists(os.path.dirname(attack_log_namer(args))):
+        os.makedirs(os.path.dirname(attack_log_namer(args)))
 
     logging.basicConfig(
         format="[%(asctime)s] - %(message)s",
@@ -280,8 +280,8 @@ def main():
     if args.adv_testing.save:
         attack_filepath = attack_file_namer(args)
 
-        if not os.path.exists(os.dirname(attack_file_namer(args))):
-            os.makedirs(os.dirname(attack_file_namer(args)))
+        if not os.path.exists(os.path.dirname(attack_file_namer(args))):
+            os.makedirs(os.path.dirname(attack_file_namer(args)))
 
         np.save(attack_filepath, attacked_images.detach().cpu().numpy())
 

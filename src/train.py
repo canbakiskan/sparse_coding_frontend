@@ -6,7 +6,6 @@ import numpy as np
 import logging
 
 import torch
-import torch.optim as optim
 import torch.backends.cudnn as cudnn
 
 from .models.resnet import ResNet, ResNetWide
@@ -23,7 +22,6 @@ from .utils.get_optimizer_scheduler import get_optimizer_scheduler
 
 from .utils.namers import (
     frontend_ckpt_namer,
-    frontend_log_namer,
     classifier_ckpt_namer,
     classifier_log_namer,
 )
@@ -49,8 +47,8 @@ def main():
     """ main function to run the experiments """
 
     args = get_arguments()
-    if not os.path.exists(os.dirname(classifier_log_namer(args))):
-        os.makedirs(os.dirname(classifier_log_namer(args)))
+    if not os.path.exists(os.path.dirname(classifier_log_namer(args))):
+        os.makedirs(os.path.dirname(classifier_log_namer(args)))
 
     logging.basicConfig(
         format="[%(asctime)s] - %(message)s",
@@ -241,8 +239,8 @@ def main():
         logger.info(f"Saved to {classifier_filepath}")
 
         if not args.neural_net.no_frontend:
-            if not os.path.exists(os.dirname(frontend_ckpt_namer(args))):
-                os.makedirs(os.dirname(frontend_ckpt_namer(args)))
+            if not os.path.exists(os.path.dirname(frontend_ckpt_namer(args))):
+                os.makedirs(os.path.dirname(frontend_ckpt_namer(args)))
 
             frontend_filepath = frontend_ckpt_namer(args)
             if args.frontend_train_supervised:
