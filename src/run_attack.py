@@ -271,12 +271,12 @@ def main():
         data = data.to(device)
         target = target.to(device)
 
+        if not read_from_file:
             if args.adv_testing.box_type == "other" and (args.adv_testing.otherbox_type == "boundary" or args.adv_testing.otherbox_type == "hopskip"):
                 adversarial_args['attack_args']['starting_points'] = closest_images[batch_idx
                                                                                     * args.neural_net.test_batch_size: (batch_idx + 1)
                                                                                     * args.neural_net.test_batch_size].to(device)
 
-        if not read_from_file:
             attack_batch = generate_attack(
                 args, model, data, target, adversarial_args)
             data += attack_batch
