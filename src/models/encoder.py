@@ -153,6 +153,8 @@ class encoder(nn.Module, noisy):
         if "activation" in self.frontend_arch:
             x = self.activation(x, self.l1_norms, self.jump)
 
+        return x
+
     def set_jump(self, jump):
         if jump is not None:
             if isinstance(jump, torch.Tensor):

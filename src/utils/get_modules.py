@@ -79,7 +79,7 @@ def get_frontend(args):
         )
 
     except:
-        raise FileNotFoundError
+        raise FileNotFoundError(frontend_ckpt_namer(args))
 
     try:
         frontend.load_state_dict(frontend_checkpoint)

@@ -35,7 +35,7 @@ class sparse_frontend(nn.Module):
         out = F.relu(self.conv1(x))
         out = F.relu(self.conv2(out))
         out = F.relu(self.conv3(out))
-        out = take_top_T(out, self.T)
+        out = top_T(out, self.T)
         out = F.relu(self.deconv1(out))
         out = F.relu(self.deconv2(out))
         out = F.relu(self.deconv3(out))
@@ -45,5 +45,5 @@ class sparse_frontend(nn.Module):
     def dictionary_update_off(self):
         pass
 
-    def set_BPDA_type(self, x):
+    def dictionary_update_on(self):
         pass
