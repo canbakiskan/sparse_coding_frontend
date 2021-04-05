@@ -40,19 +40,25 @@ def main():
 
     np.savez(dict_filepath, dict=dcts)
 
-    dcts = (dcts-dcts.min())/(dcts.max()-dcts.min())
-    plt.figure(figsize=(15, 5))
-    for i in range(H):
-        for j in range(W):
-            for k in range(C):
-                plt.subplot(H, W*C, W*C*i+W*k+j+1)
-                plt.imshow(
-                    dcts[W*C*i+C*j+k, :].reshape(*args.defense.patch_shape))
-                plt.yticks([])
-                plt.xticks([])
+    dcts = (dcts-dcts.min())/(dcts.max()-dcts.min())\
 
-    plt.savefig("dct.pdf")
-    plt.close()
+    if args.dictionary.display:
+
+        plt.figure(figsize=(15, 5))
+        for i in range(H):
+            for j in range(W):
+                for k in range(C):
+                    plt.subplot(H, W*C, W*C*i+W*k+j+1)
+                    plt.imshow(
+                        dcts[W*C*i+C*j+k, :].reshape(*args.defense.patch_shape))
+                    plt.yticks([])
+                    plt.xticks([])
+
+        figures_dir = args.directory + "figs/"
+
+        plt.savefig(figures_dir + "dct.pdf")
+
+        plt.close()
 
 
 if __name__ == "__main__":

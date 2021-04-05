@@ -223,7 +223,7 @@ def main():
         figures_dir = args.directory + "figs/"
 
         dictionary_parameters_string = dict_params_string(args)
-        plt.savefig(figures_dir + "dict_" +
+        plt.savefig(figures_dir + "{args.dataset}_" + "dict_" +
                     dictionary_parameters_string + ".pdf")
 
 
