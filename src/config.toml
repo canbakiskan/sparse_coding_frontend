@@ -1,4 +1,4 @@
-seed = 2020 # random seed
+seed = 2021 # random seed
 use_gpu = true
 log_interval = 100 # how many batches to wait before logging training status
 
@@ -40,8 +40,6 @@ assumed_budget = 0.03137254901 # the budget defense assumes, used in activation 
 train_batch_size = 64
 test_batch_size = 100
 classifier_arch = "resnet" # resnet, resnetwide, efficientnet, preact_resnet, dropout_resnet, resnet_after_encoder
-nb_epochs = 70
-no_frontend = false # whether to use the frontend or not
 save_checkpoint = true
 
     [neural_net.optimizer]

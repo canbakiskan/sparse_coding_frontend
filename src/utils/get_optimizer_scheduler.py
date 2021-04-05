@@ -26,7 +26,7 @@ def get_optimizer_scheduler(args, model, batches_per_epoch):
         raise NotImplementedError
 
     if args.neural_net.optimizer.lr_scheduler == "cyclic":
-        lr_steps = args.neural_net.nb_epochs * batches_per_epoch
+        lr_steps = args.neural_net.epochs * batches_per_epoch
         scheduler = optim.lr_scheduler.CyclicLR(
             optimizer,
             base_lr=args.neural_net.optimizer.cyclic.lr_min,

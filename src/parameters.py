@@ -39,6 +39,24 @@ def get_arguments():
     )
 
     # Adversarial testing parameters
+    neural_net = parser.add_argument_group(
+        "neural_net", "Neural-net related config"
+    )
+    neural_net.add_argument(
+        "--neural_net_no_frontend",
+        action="store_true",
+        default=False,
+        help="whether to use the frontend or not",
+    )
+    neural_net.add_argument(
+        "--neural_net_epochs",
+        type=int,
+        default=70,
+        metavar="",
+        help="Number of epochs in training",
+    )
+
+    # Adversarial testing parameters
     adv_testing = parser.add_argument_group(
         "adv_testing", "Adversarial testing related config"
     )
@@ -55,7 +73,7 @@ def get_arguments():
     adv_testing.add_argument(
         "--attack_otherbox_type",
         type=str,
-        default="transfer",
+        default="boundary",
         choices=["transfer", "boundary", "hopskip", "genattack"],
         metavar="",
         help="Other box (black, pseudowhite) attack type",
@@ -72,7 +90,7 @@ def get_arguments():
         "-at_method",
         "--attack_method",
         type=str,
-        default="PGD_EOT_normalized",
+        default="PGD",
         choices=[
             "PGD_EOT",
             "PGD_smooth",
@@ -116,7 +134,7 @@ def get_arguments():
     adv_testing.add_argument(
         "--attack_activation_backward_steepness",
         type=float,
-        default=0.0,
+        default=4.0,
         metavar="",
         help="Steepness of smooth backward pass approximation to activation function. 0.0 means identity. (default: 0.0)",
     )
@@ -172,7 +190,7 @@ def get_arguments():
         "-at_nr",
         "--attack_nb_restarts",
         type=int,
-        default=10,
+        default=100,
         metavar="",
         help="number of restarts for PGD",
     )

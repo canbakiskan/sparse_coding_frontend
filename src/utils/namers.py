@@ -60,7 +60,7 @@ def frontend_params_string(args):
     if "noisy" in args.defense.frontend_arch:
         frontend_params_string += f"_g_{args.defense.train_noise_gamma:.2f}"
 
-    frontend_params_string += f"_ep_{args.neural_net.nb_epochs}"
+    frontend_params_string += f"_ep_{args.neural_net.epochs}"
 
     return frontend_params_string
 
@@ -113,7 +113,7 @@ def classifier_params_string(args):
     if not args.adv_training.method and args.neural_net.no_frontend:
         classifier_params_string += "_NT"
 
-    classifier_params_string += f"_ep_{args.neural_net.nb_epochs}"
+    classifier_params_string += f"_ep_{args.neural_net.epochs}"
 
     if not args.neural_net.no_frontend:
         classifier_params_string += "_"

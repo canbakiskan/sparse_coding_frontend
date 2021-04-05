@@ -186,7 +186,7 @@ def main():
         logger.info(args.adv_training.method + " training")
         logger.info("Epoch \t Seconds \t LR \t \t Train Loss \t Train Acc")
 
-        for epoch in tqdm(range(1, args.neural_net.nb_epochs + 1)):
+        for epoch in tqdm(range(1, args.neural_net.epochs + 1)):
             start_time = time.time()
 
             train_args = dict(
@@ -214,7 +214,7 @@ def main():
         logger.info("Epoch \t Seconds \t LR \t \t Train Loss \t Train Acc")
 
         logger.info("Standard training")
-        for epoch in tqdm(range(1, args.neural_net.nb_epochs + 1)):
+        for epoch in tqdm(range(1, args.neural_net.epochs + 1)):
             start_time = time.time()
 
             train_loss, train_acc = train(
