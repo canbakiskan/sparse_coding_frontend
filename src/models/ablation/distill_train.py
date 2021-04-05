@@ -135,17 +135,9 @@ def main():
     else:
         teacher_frontend = get_frontend(args)
 
-        if args.adv_testing.box_type == "white":
-            if args.adv_testing.backward == "top_T_dropout_identity":
-                teacher_frontend.set_BPDA_type("identity")
+        teacher_model = Combined(teacher_frontend, teacher_classifier)
 
-            elif args.adv_testing.backward == "top_T_top_U":
-                teacher_frontend.set_BPDA_type("top_U")
-
-            teacher_model = Combined(teacher_frontend, teacher_classifier)
-
-        teacher_model = teacher_model.to(device)
-        teacher_model.eval()
+    teacher_model = teacher_model.to(device)
 
     teacher_model.eval()
 

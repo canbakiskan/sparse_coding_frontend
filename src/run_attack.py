@@ -139,18 +139,9 @@ def main():
     else:
         frontend = get_frontend(args)
 
-        if args.adv_testing.box_type == "white":
-            if args.adv_testing.backward == "top_T_dropout_identity":
-                frontend.set_BPDA_type("identity")
+        model = Combined(frontend, classifier)
 
-            elif args.adv_testing.backward == "top_T_top_U":
-                frontend.set_BPDA_type("top_U")
-
-            model = Combined(frontend, classifier)
-
-        model = model.to(device)
-        model.eval()
-
+    model = model.to(device)
     model.eval()
 
     for p in model.parameters():
