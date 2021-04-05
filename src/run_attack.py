@@ -334,7 +334,8 @@ def main():
     pred_attack = attack_output.argmax(dim=1, keepdim=True)[
         : args.adv_testing.nb_imgs]
 
-    accuracy_attack = pred_attack.eq(target.view_as(pred_attack)).mean().item()
+    accuracy_attack = pred_attack.eq(
+        target.view_as(pred_attack)).float().mean().item()
 
     logger.info(f"Attack accuracy: {(100*accuracy_attack):.2f}%")
 
