@@ -8,7 +8,7 @@ src_path="$(dirname $shellscripts_path)"
 
 if grep -E "lr_max\s*=\s*0.01" $src_path/config.toml; then
     source "$dir_path/base_commands.sh"
-    defense_args="--autoencoder_arch=top_T_autoencoder --top_T=500 --top_U=500"
+    defense_args="--defense_frontend_arch=top_T_frontend --defense_top_T=500 --attack_top_U=500"
 
     for base_command in "${base_commands[@]}"
     do

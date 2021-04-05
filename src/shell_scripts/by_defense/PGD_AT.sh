@@ -4,7 +4,7 @@ full_path=$(realpath $0)
 dir_path=$(dirname $full_path)
 
 source "$dir_path/base_commands.sh"
-defense_args="--classifier_epochs=100 --no_autoencoder --adv_training_attack=PGD"
+defense_args="--neural_net_epochs=100 --neural_net_no_frontend --adv_training_method=PGD"
 
 for base_command in "${base_commands[@]}"
 do

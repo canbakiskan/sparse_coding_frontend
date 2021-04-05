@@ -1,8 +1,8 @@
 #!/bin/bash
 
 our_defense=""
-natural="--classifier_epochs=100 --no_autoencoder"
-PGD_AT="--classifier_epochs=100 --no_autoencoder --adv_training_attack=PGD"
-TRADES="--classifier_epochs=100 --no_autoencoder --adv_training_attack=TRADES"
+natural="--neural_net_epochs=100 --neural_net_no_frontend"
+PGD_AT="--neural_net_epochs=100 --neural_net_no_frontend --adv_training_method=PGD"
+TRADES="--neural_net_epochs=100 --neural_net_no_frontend --adv_training_method=TRADES"
 
 defense_args=("$our_defense" "$natural" "$PGD_AT" "$TRADES")
