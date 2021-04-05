@@ -117,7 +117,7 @@ def main():
 
             dico = MiniBatchDictionaryLearning(
                 n_components=args.dictionary.nb_atoms,
-                alpha=args.dictionary.lambda,
+                alpha=args.dictionary.lamda,
                 n_iter=args.dictionary.iter,
                 batch_size=args.dictionary.batch_size,
                 n_jobs=20,
@@ -179,7 +179,7 @@ def main():
             t0 = time()
             dico = MiniBatchDictionaryLearning(
                 n_components=args.dictionary.nb_atoms,
-                alpha=args.dictionary.lambda,
+                alpha=args.dictionary.lamda,
                 n_iter=args.dictionary.iter,
                 batch_size=args.dictionary.batch_size,
                 n_jobs=20,

@@ -82,7 +82,7 @@ Run the corresponding bash script in `shell_scripts/ablation` to reproduce.
 |batch_size|`config.toml`|5|int||
 |display|`config.toml`|false|bool||
 |iter|`config.toml`|1000|int||
-|lambda|`config.toml`|1.0|float||
+|lamda|`config.toml`|1.0|float||
 |nb_atoms|`config.toml`|500|int||
 |online|`config.toml`|false|bool||
 |type|`config.toml`|"overcomplete"|"overcomplete","dct"||

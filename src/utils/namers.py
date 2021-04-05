@@ -17,7 +17,7 @@ def dict_params_string(args):
             dictionary_parameters = {
                 "ps": args.defense.patch_size,
                 "st": args.defense.stride,
-                "l": args.dictionary.lambda,
+                "l": args.dictionary.lamda,
                 "n": args.dictionary.nb_atoms,
                 "it": args.dictionary.iter,
             }
