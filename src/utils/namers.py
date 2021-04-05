@@ -148,6 +148,9 @@ def attack_params_string(args):
         if args.adv_testing.top_T_backward == "top_U":
             attack_params_string += f"_U_{args.adv_testing.top_U}"
 
+        if args.adv_testing.dropout_backward == "identity":
+            attack_params_string += f"_dropout_identity"
+
         if args.adv_testing.activation_backward_steepness != 0.0:
             attack_params_string += f"_steep_{args.adv_testing.activation_backward_steepness:.1f}"
 
