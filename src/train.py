@@ -47,6 +47,16 @@ def main():
     """ main function to run the experiments """
 
     args = get_arguments()
+
+    if os.path.exists(classifier_ckpt_namer(args)):
+        print(
+            "Checkpoint already exists. Do you want to retrain? [y/(n)]", end=" ")
+        response = input()
+        sys.stdout.write("\033[F")
+        sys.stdout.write("\033[K")
+        if response != "y":
+            exit()
+
     if not os.path.exists(os.path.dirname(classifier_log_namer(args))):
         os.makedirs(os.path.dirname(classifier_log_namer(args)))
 
