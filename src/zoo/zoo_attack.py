@@ -846,10 +846,39 @@ if __name__ == "__main__":
     print("Took", timeend-timestart,
           "seconds to run", len(inputs), "samples.")
 
-    print("Valid Classification:", np.argsort(
-        model(inputs[0].reshape((1,) + adv.shape)+0.5))[-1:-6:-1])
-    print("Adversarial Classification:", np.argsort(
-        model(adv.reshape((1,) + adv.shape)+0.5))[-1:-6:-1])
+    adv += 0.5
+    inputs += 0.5
+
+    valid_class = np.argmax(model(inputs.float()).cpu().numpy(), -1)
+    adv_class = np.argmax(model(adv.float()).cpu().numpy(), -1)
+
+    acc = ((valid_class == adv_class).sum())/len(inputs)
+    print("Valid Classification: ", valid_class)
+    print("Adversarial Classification: ", adv_class)
+    print("Success Rate: ", (1.0-acc)*100.0)
+
+    fooled_indices = (valid_class != adv_class)
+
+    # breakpoint()
+    plt.figure(figsize=(10, 10))
+    for i in range(3):
+        plt.subplot(3, 3, 3*i+1)
+        plt.imshow(inputs[fooled_indices]
+                   [i].detach().cpu().permute(1, 2, 0).numpy())
+        plt.xticks([])
+        plt.yticks([])
+        plt.subplot(3, 3, 3*i+2)
+        plt.imshow(adv[fooled_indices]
+                   [i].detach().cpu().permute(1, 2, 0).numpy())
+        plt.xticks([])
+        plt.yticks([])
+        plt.subplot(3, 3, 3*i+3)
+        plt.imshow((adv[fooled_indices]-inputs[fooled_indices])
+                   [i].detach().cpu().permute(1, 2, 0).numpy())
+        plt.xticks([])
+        plt.yticks([])
+    plt.tight_layout()
+    plt.savefig('asd.pdf')
 
     print("Average distortion: ", torch.mean(
         torch.sum((adv[fooled_indices]-inputs[fooled_indices])**2, dim=(1, 2, 3))**.5).item())
