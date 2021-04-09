@@ -436,9 +436,11 @@ class BlackBoxL2:
         # coordinate_ADAM(losses, indice, self.grad, self.hess, self.batch_size, self.mt, self.vt, self.real_modifier, self.modifier_up, self.modifier_down, self.LEARNING_RATE, self.adam_epoch, self.beta1, self.beta2, not self.use_tanh, true_grads)
         # coordinate_Newton(losses, indice, self.grad, self.hess, self.batch_size, self.mt, self.vt, self.real_modifier, self.modifier_up, self.modifier_down, self.LEARNING_RATE, self.adam_epoch, self.beta1, self.beta2, not self.use_tanh)
         # coordinate_Newton_ADAM(losses, indice, self.grad, self.hess, self.batch_size, self.mt, self.vt, self.real_modifier, self.modifier_up, self.modifier_down, self.LEARNING_RATE, self.adam_epoch, self.beta1, self.beta2, not self.use_tanh)
-
-        self.solver(losses.cpu().numpy(), indice.cpu().numpy(), self.grad.cpu().numpy(), self.hess.cpu().numpy(), self.batch_size, self.mt, self.vt, self.real_modifier.cpu().numpy(),
+        real_modifier_numpy = self.real_modifier.cpu().numpy()
+        self.solver(losses.cpu().numpy(), indice.cpu().numpy(), self.grad.cpu().numpy(), self.hess.cpu().numpy(), self.batch_size, self.mt, self.vt, real_modifier_numpy,
                     self.modifier_up.cpu().numpy(), self.modifier_down.cpu().numpy(), self.LEARNING_RATE, self.adam_epoch, self.beta1, self.beta2, not self.use_tanh)
+        self.real_modifier = torch.from_numpy(
+            real_modifier_numpy).to(self.device)
         # adjust sample probability, sample around the points with large gradient
         if self.save_ckpts:
             torch.save(self.real_modifier, '{}/iter{}'.format(self.save_ckpts,
