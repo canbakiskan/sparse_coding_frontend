@@ -359,10 +359,11 @@ class BlackBoxL2:
 
     def fake_blackbox_optimizer(self):
         # for testing
-        self.real_modifier.requires_grad = True
+        # self.real_modifier.requires_grad = True
         self.compute_loss(self.real_modifier)
-        self.loss.backward()
-        true_grads = self.real_modifier.grad.data
+        # self.total_loss.backward()
+        # true_grads = self.real_modifier.grad.data
+        true_grads = torch.autograd.grad(self.total_loss, self.real_modifier)
 
         losses, l2s, loss1, loss2, scores, nimgs = self.total_loss, self.l2dist, self.loss1, self.loss2, self.output, self.newimg
 
