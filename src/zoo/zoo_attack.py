@@ -21,13 +21,13 @@ import torch.nn.functional as F
 from torchvision import transforms, datasets
 
 
-BINARY_SEARCH_STEPS = 1  # number of times to adjust the constant with binary search
-MAX_ITERATIONS = 10000   # number of iterations to perform gradient descent
+BINARY_SEARCH_STEPS = 9  # number of times to adjust the constant with binary search
+MAX_ITERATIONS = 1000   # number of iterations to perform gradient descent
 ABORT_EARLY = True      # if we stop improving, abort gradient descent early
-LEARNING_RATE = 2e-3     # larger values converge faster to less accurate results
-TARGETED = True          # should we target one specific class? or just be wrong?
+LEARNING_RATE = 0.01    # larger values converge faster to less accurate results
+TARGETED = False          # should we target one specific class? or just be wrong?
 CONFIDENCE = 0           # how strong the adversarial example should be
-INITIAL_CONST = 0.5      # the initial constant c to pick as a first guess
+INITIAL_C = 0.01      # the initial constant c to pick as a first guess
 
 
 @jit(nopython=True)
@@ -36,7 +36,7 @@ def coordinate_ADAM(losses, indice, grad, hess, batch_size, mt_arr, vt_arr, real
     for i in range(batch_size):
         grad[i] = (losses[i*2+1] - losses[i*2+2]) / 0.0002
     # true_grads = self.sess.run(self.grad_op, feed_dict={self.modifier: self.real_modifier})
-    # true_grads, losses, l2s, scores, nimgs = self.sess.run([self.grad_op, self.loss, self.l2dist, self.output, self.newimg], feed_dict={self.modifier: self.real_modifier})
+    # true_grads, losses, l2s, scores, nimgs = self.sess.run([self.grad_op, self.total_loss, self.l2dist, self.output, self.newimg], feed_dict={self.modifier: self.real_modifier})
     # grad = true_grads[0].reshape(-1)[indice]
     # print(grad, true_grads[0].reshape(-1)[indice])
     # self.real_modifier.reshape(-1)[indice] -= self.LEARNING_RATE * grad
@@ -54,7 +54,7 @@ def coordinate_ADAM(losses, indice, grad, hess, batch_size, mt_arr, vt_arr, real
     m = real_modifier.reshape(-1)
     old_val = m[indice]
     old_val -= lr * corr * mt / (np.sqrt(vt) + 1e-8)
-    # set it back to [-0.5, +0.5] region
+    # set it back to [-0.5, +0.5] region is tanh is used
     if proj:
         old_val = np.maximum(np.minimum(old_val, up[indice]), down[indice])
     # print(grad)
@@ -151,14 +151,14 @@ class BlackBoxL2:
                  targeted=TARGETED, learning_rate=LEARNING_RATE,
                  binary_search_steps=BINARY_SEARCH_STEPS, max_iterations=MAX_ITERATIONS, print_every=100, early_stop_iters=0,
                  abort_early=ABORT_EARLY,
-                 initial_const=INITIAL_CONST,
-                 use_log=False, use_tanh=True, use_resize=False, adam_beta1=0.9, adam_beta2=0.999, reset_adam_after_found=False,
+                 initial_c=INITIAL_C,
+                 use_log=True, use_tanh=True, use_resize=False, adam_beta1=0.9, adam_beta2=0.999, reset_adam_after_found=False,
                  solver="adam", save_ckpts="", load_checkpoint="", start_iter=0,
-                 init_size=32, use_importance=True, device="cuda"):
+                 init_size=32, use_importance=False, device="cuda"):
         """
-        The L_2 optimized attack. 
+        The L_2 optimized attack.
 
-        This attack is the most efficient and should be used as the primary 
+        This attack is the most efficient and should be used as the primary
         attack to evaluate potential defenses.
 
         Returns adversarial examples for the supplied model.
@@ -170,12 +170,12 @@ class BlackBoxL2:
         learning_rate: The learning rate for the attack algorithm. Smaller values
           produce better results but are slower to converge.
         binary_search_steps: The number of times we perform binary search to
-          find the optimal tradeoff-constant between distance and confidence. 
+          find the optimal tradeoff-constant between distance and confidence.
         max_iterations: The maximum number of iterations. Larger values are more
           accurate; setting too small will require a large learning rate and will
           produce poor results.
         abort_early: If true, allows early aborts if gradient descent gets stuck.
-        initial_const: The initial tradeoff-constant to use to tune the relative
+        initial_c: The initial tradeoff-constant to use to tune the relative
           importance of distance and confidence. If binary_search_steps is large,
           the initial constant is not important.
         """
@@ -194,7 +194,7 @@ class BlackBoxL2:
         self.BINARY_SEARCH_STEPS = binary_search_steps
         self.ABORT_EARLY = abort_early
         self.CONFIDENCE = confidence
-        self.initial_const = initial_const
+        self.initial_c = initial_c
         self.start_iter = start_iter
         self.batch_size = batch_size
         self.num_channels = self.num_channels
@@ -236,13 +236,16 @@ class BlackBoxL2:
         else:
             self.real_modifier = torch.zeros(
                 (1,) + small_single_shape, dtype=torch.float32, device=self.device)
+
+        if solver == "fake_zero":
+            self.real_modifier.requires_grad = True
         # self.real_modifier = np.random.randn(image_size * image_size * num_channels).astype(torch.float32).reshape((1,) + single_shape)
         # self.real_modifier /= np.linalg.norm(self.real_modifier)
         # these are variables to be more efficient in sending data to tf
         # we only work on 1 image at once; the batch is for evaluation loss at different modifiers
-        self.timg = torch.zeros(single_shape, device=self.device)
-        self.tlab = torch.zeros(num_labels, device=self.device)
-        self.const = 0.0
+        self.true_img = torch.zeros(single_shape, device=self.device)
+        self.true_label_1hot = torch.zeros(num_labels, device=self.device)
+        self.c = 0.0
 
         # prepare the list of all valid variables
         var_size = self.small_x * self.small_y * self.num_channels
@@ -361,7 +364,7 @@ class BlackBoxL2:
         self.loss.backward()
         true_grads = self.real_modifier.grad.data
 
-        losses, l2s, loss1, loss2, scores, nimgs = self.loss, self.l2dist, self.loss1, self.loss2, self.output, self.newimg
+        losses, l2s, loss1, loss2, scores, nimgs = self.total_loss, self.l2dist, self.loss1, self.loss2, self.output, self.newimg
 
         # ADAM update
         grad = true_grads[0].reshape(-1).cpu().numpy()
@@ -374,7 +377,8 @@ class BlackBoxL2:
         # m is a *view* of self.real_modifier
         m = self.real_modifier.reshape(-1)
         # this is in-place
-        m -= self.LEARNING_RATE * corr * (mt / (torch.sqrt(vt) + 1e-8))
+        m -= self.LEARNING_RATE * corr * (torch.tensor(mt, device=self.device) / (
+            torch.sqrt(torch.tensor(vt, device=self.device)) + 1e-8))
         self.mt = mt
         self.vt = vt
         # m -= self.LEARNING_RATE * grad
@@ -404,7 +408,7 @@ class BlackBoxL2:
         else:
             # var_indice = np.random.choice(
             #     self.var_list.size, self.batch_size, replace=False)
-            var_indice = torch.randperm(len(self.var_list.numel()), device=self.device)[
+            var_indice = torch.randperm(self.var_list.numel(), device=self.device)[
                 :self.batch_size]
 
         indice = self.var_list[var_indice]
@@ -420,9 +424,9 @@ class BlackBoxL2:
             var[i * 2 + 2].reshape(-1)[indice[i]] -= 0.0001
 
         self.compute_loss(var)
-        losses, l2s, loss1, loss2, scores, nimgs = self.loss, self.l2dist, self.loss1, self.loss2, self.output, self.newimg
+        losses, l2s, loss1, loss2, scores, nimgs = self.total_loss, self.l2dist, self.loss1, self.loss2, self.output, self.newimg
 
-        # losses = self.sess.run(self.loss, feed_dict={self.modifier: var})
+        # losses = self.sess.run(self.total_loss, feed_dict={self.modifier: var})
         # t_grad = self.sess.run(self.grad_op, feed_dict={self.modifier: self.real_modifier})
         # self.grad = t_grad[0].reshape(-1)
         # true_grads = self.sess.run(self.grad_op, feed_dict={self.modifier: self.real_modifier})
@@ -466,39 +470,40 @@ class BlackBoxL2:
             self.scaled_modifier = modifier
 
         # the resulting image, tanh'd to keep bounded from -0.5 to 0.5
-        # broadcast self.timg to every dimension of modifier
+        # broadcast self.true_img to every dimension of modifier
 
         if self.use_tanh:
-            self.newimg = torch.tanh(self.scaled_modifier + self.timg)/2
+            self.newimg = torch.tanh(self.scaled_modifier + self.true_img)/2
         else:
-            self.newimg = self.scaled_modifier + self.timg
+            self.newimg = self.scaled_modifier + self.true_img
 
         # prediction BEFORE-SOFTMAX of the model
         # now we have output at #batch_size different modifiers
         # the output should have shape (batch_size, num_labels)
+
+        self.output = model(self.newimg+0.5)
         if use_log:
-            self.output = model(self.newimg+0.5)
-        else:
-            self.output = model.get_logits(self.newimg)
+            self.output = F.softmax(self.output, -1)
 
         # distance to the input data
         if self.use_tanh:
             self.l2dist = torch.sum(torch.square(
-                self.newimg-torch.tanh(self.timg)/2), [1, 2, 3])
+                self.newimg-torch.tanh(self.true_img)/2), [1, 2, 3])
         else:
             self.l2dist = torch.sum(torch.square(
-                self.newimg - self.timg), [1, 2, 3])
+                self.newimg - self.true_img), [1, 2, 3])
 
         # compute the probability of the label class versus the maximum other
-        # self.tlab * self.output selects the Z value of real class
-        # because self.tlab is an one-hot vector
+        # self.true_label_1hot * self.output selects the Z value of real class
+        # because self.true_label_1hot is an one-hot vector
         # the reduce_sum removes extra zeros, now get a vector of size #batch_size
-        self.real = torch.sum((self.tlab)*self.output, 1)
-        # (1-self.tlab)*self.output gets all Z values for other classes
+
+        self.real = torch.sum((self.true_label_1hot)*self.output, 1)
+        # (1-self.true_label_1hot)*self.output gets all Z values for other classes
         # Because soft Z values are negative, it is possible that all Z values are less than 0
         # and we mistakenly select the real class as the max. So we minus 10000 for real class
         self.other = torch.max(
-            (1-self.tlab)*self.output - (self.tlab*10000), 1)[0]
+            (1-self.true_label_1hot)*self.output - (self.true_label_1hot*10000), 1)[0]
 
         # If self.targeted is true, then the targets represents the target labels.
         # If self.targeted is false, then targets are the original class labels.
@@ -508,14 +513,13 @@ class BlackBoxL2:
                 # loss1 = torch.maximum(0.0, torch.log(
                 #     self.other + 1e-30) - torch.log(self.real + 1e-30))
                 loss1 = torch.clamp(
-                    torch.log(self.other + 1e-30) - torch.log(self.real + 1e-30), min=0.0)
+                    torch.log(self.other + 1e-30) - torch.log(self.real + 1e-30), min=-self.CONFIDENCE)
             else:
                 # if targetted, optimize for making the other class (real) most likely
                 # loss1 = torch.maximum(
                 #     0.0, self.other-self.real+self.CONFIDENCE)
 
-                loss1 = torch.clamp(self.other-self.real +
-                                    self.CONFIDENCE, min=0.0)
+                loss1 = torch.clamp(self.other-self.real, min=-self.CONFIDENCE)
         else:
             if use_log:
                 # loss1 = torch.log(self.real)
@@ -523,66 +527,54 @@ class BlackBoxL2:
                 #     self.real + 1e-30) - torch.log(self.other + 1e-30))
 
                 loss1 = torch.clamp(torch.log(
-                    self.real + 1e-30) - torch.log(self.other + 1e-30), min=0.0)
+                    self.real + 1e-30) - torch.log(self.other + 1e-30), min=-self.CONFIDENCE)
             else:
                 # if untargeted, optimize for making this class least likely.
                 # loss1 = torch.maximum(
                 #     0.0, self.real-self.other+self.CONFIDENCE)
 
-                loss1 = torch.clamp(self.real-self.other +
-                                    self.CONFIDENCE, min=0.0)
+                loss1 = torch.clamp(self.real-self.other, min=-self.CONFIDENCE)
 
         # sum up the losses (output is a vector of #batch_size)
         self.loss2 = self.l2dist
-        self.loss1 = self.const*loss1
-        self.loss = self.loss1+self.loss2
-
-    def attack(self, imgs, targets):
-        """
-        Perform the L_2 attack on the given images for the given targets.
-
-        If self.targeted is true, then the targets represents the target labels.
-        If self.targeted is false, then targets are the original class labels.
-        """
-        r = []
-        print('go up to', len(imgs))
-        # we can only run 1 image at a time, minibatches are used for gradient evaluation
-        for i in range(0, len(imgs)):
-            print('tick', i)
-            r.extend(self.attack_batch(imgs[i], targets[i]))
-        return torch.tensor(r)
+        self.loss1 = self.c*loss1
+        self.total_loss = self.loss1+self.loss2
 
     # only accepts 1 image at a time. Batch is used for gradient evaluations at different points
-    def attack_batch(self, img, lab):
+
+    def attack_batch(self, img, label_1hot):
         """
         Run the attack on a batch of images and labels.
         """
-        def compare(x, y):
+        def is_confidently_fooled(x, true_label):
             if not isinstance(x, (float, int, np.int64)) and not (isinstance(x, torch.Tensor) and x.numel() == 1):
-                x = torch.clone(x)
+                z = torch.clone(x)
                 if self.TARGETED:
-                    x[y] -= self.CONFIDENCE
+                    z[true_label] -= self.CONFIDENCE
                 else:
-                    x[y] += self.CONFIDENCE
-                x = torch.argmax(x)
-            if self.TARGETED:
-                return x == y
+                    z[true_label] += self.CONFIDENCE
+                z = torch.argmax(z)
             else:
-                return x != y
+                z = x
+
+            if self.TARGETED:
+                return z == true_label
+            else:
+                return z != true_label
 
         # remove the extra batch dimension
         if len(img.shape) == 4:
             img = img[0]
-        if len(lab.shape) == 2:
-            lab = lab[0]
+        if len(label_1hot.shape) == 2:
+            label_1hot = label_1hot[0]
         # convert to tanh-space
         if self.use_tanh:
             img = torch.arctanh(img*1.999999)
 
         # set the lower and upper bounds accordingly
-        lower_bound = 0.0
-        CONST = self.initial_const
-        upper_bound = 1e10
+        c_lower_bound = 0.0
+        c = self.initial_c
+        c_upper_bound = 1e10
 
         # convert img to float32 to avoid numba error
         img = img.type(torch.float32)
@@ -593,41 +585,47 @@ class BlackBoxL2:
             self.modifier_down = -0.5 - img.reshape(-1)
 
         # clear the modifier
-        if not self.load_checkpoint:
-            if self.use_resize:
-                self.resize_img(self.resize_init_size,
-                                self.resize_init_size, True)
-            else:
-                self.real_modifier.fill_(0.0)
+        # if not self.load_checkpoint:
+        #     if self.use_resize:
+        #         self.resize_img(self.resize_init_size,
+        #                         self.resize_init_size, True)
+        #     else:
+        #         self.real_modifier = torch.zeros(
+        #             (1,) + (self.num_channels, self.small_x, self.small_y), dtype=torch.float32, device=self.device)
+        #         if self.solver_name == "fake_zero":
+        #             self.real_modifier.requires_grad = True
 
         # the best l2, score, and image attack
-        o_best_const = CONST
-        o_bestl2 = 1e10
-        o_bestscore = -1
-        o_bestattack = img
+        outer_best_c = c
+        outer_best_l2 = 1e10
+        outer_best_score = -1
+        if self.use_tanh:
+            outer_best_attack = torch.tanh(img)/2
+        else:
+            outer_best_attack = img
 
         for outer_step in range(self.BINARY_SEARCH_STEPS):
-            print(o_bestl2)
+            print(outer_best_l2)
 
-            bestl2 = 1e10
-            bestscore = -1
+            best_l2 = 1e10
+            best_score = -1
 
             # The last iteration (if we run many steps) repeat the search once.
             if self.repeat == True and outer_step == self.BINARY_SEARCH_STEPS-1:
-                CONST = upper_bound
+                c = c_upper_bound
 
             # set the variables so that we don't have to send them over again
-            self.setup = []
-            self.timg = img
-            self.tlab = lab
-            self.const = CONST
-            self.setup = [self.timg, self.tlab, self.const]
+            # self.setup = []
+            self.true_img = img.detach().clone()
+            self.true_label_1hot = label_1hot.detach().clone()
+            self.c = c
+            # self.setup = [self.true_img, self.true_label_1hot, self.c]
 
             # use the current best model
-            # np.copyto(self.real_modifier, o_bestattack - img)
+            # np.copyto(self.real_modifier, outer_best_attack - img)
             # use the model left by last constant change
 
-            prev = 1e6
+            prev_loss = 1e6
             train_timer = 0.0
             last_loss1 = 1.0
             if not self.load_checkpoint:
@@ -635,7 +633,11 @@ class BlackBoxL2:
                     self.resize_img(self.resize_init_size,
                                     self.resize_init_size, True)
                 else:
-                    self.real_modifier.fill_(0.0)
+                    self.real_modifier = torch.zeros(
+                        (1,) + (self.num_channels, self.small_x, self.small_y), dtype=torch.float32, device=self.device)
+                    if self.solver_name == "fake_zero":
+                        self.real_modifier.requires_grad = True
+
             # reset ADAM status
             self.mt.fill(0.0)
             self.vt.fill(0.0)
@@ -658,25 +660,26 @@ class BlackBoxL2:
                     #     self.resize_img(256,256)
                 # print out the losses every 10%
                 if iteration % (self.print_every) == 0:
-                    # print(iteration,self.sess.run((self.loss,self.real,self.other,self.loss1,self.loss2), feed_dict={self.modifier: self.real_modifier}))
+                    # print(iteration,self.sess.run((self.total_loss,self.real,self.other,self.loss1,self.loss2), feed_dict={self.modifier: self.real_modifier}))
+
                     self.compute_loss(self.real_modifier)
-                    loss, real, other, loss1, loss2 = self.loss, self.real, self.other, self.loss1, self.loss2
+
+                    total_loss, real, other, loss1, loss2 = self.total_loss, self.real, self.other, self.loss1, self.loss2
                     print("[STATS][L2] iter = {}, cost = {}, time = {:.3f}, size = {}, loss = {:.5g}, real = {:.5g}, other = {:.5g}, loss1 = {:.5g}, loss2 = {:.5g}".format(
-                        iteration, eval_costs, train_timer, self.real_modifier.shape, loss[0], real[0], other[0], loss1[0], loss2[0]))
+                        iteration, eval_costs, train_timer, self.real_modifier.shape, total_loss[0], real[0], other[0], loss1[0], loss2[0]))
                     sys.stdout.flush()
                     # np.save('black_iter_{}'.format(iteration), self.real_modifier)
 
                 attack_begin_time = time.time()
                 # perform the attack
                 if self.solver_name == "fake_zero":
-                    l, l2, loss1, loss2, score, nimg = self.fake_blackbox_optimizer()
+                    total_loss, l2, loss1, loss2, score, nimg = self.fake_blackbox_optimizer()
                 else:
-                    l, l2, loss1, loss2, score, nimg = self.blackbox_optimizer(
+                    total_loss, l2, loss1, loss2, score, nimg = self.blackbox_optimizer(
                         iteration)
-                # l = self.blackbox_optimizer(iteration)
 
                 if self.solver_name == "fake_zero":
-                    eval_costs += torch.prod(self.real_modifier.shape)
+                    eval_costs += self.real_modifier.numel()
                 else:
                     eval_costs += self.batch_size
 
@@ -694,53 +697,69 @@ class BlackBoxL2:
                 # check if we should abort search if we're getting nowhere.
                 # if self.ABORT_EARLY and iteration%(self.MAX_ITERATIONS//10) == 0:
                 if self.ABORT_EARLY and iteration % self.early_stop_iters == 0:
-                    if l > prev*.9999:
+                    if total_loss > prev_loss*.9999:
                         print("Early stopping because there is no improvement")
                         break
-                    prev = l
+                    prev_loss = total_loss
 
                 # adjust the best result found so far
                 # the best attack should have the target class with the largest value,
                 # and has smallest l2 distance
 
-                if l2 < bestl2 and compare(score, torch.argmax(lab)):
-                    bestl2 = l2
-                    bestscore = torch.argmax(score)
-                if l2 < o_bestl2 and compare(score, torch.argmax(lab)):
+                if l2 < best_l2 and is_confidently_fooled(score, torch.argmax(label_1hot)):
+                    best_l2 = l2
+                    best_score = torch.argmax(score)
+                if l2 < outer_best_l2 and is_confidently_fooled(score, torch.argmax(label_1hot)):
                     # print a message if it is the first attack found
-                    if o_bestl2 == 1e10:
+                    if outer_best_l2 == 1e10:
                         print("[STATS][L3](First valid attack found!) iter = {}, cost = {}, time = {:.3f}, size = {}, loss = {:.5g}, loss1 = {:.5g}, loss2 = {:.5g}, l2 = {:.5g}".format(
-                            iteration, eval_costs, train_timer, self.real_modifier.shape, l, loss1, loss2, l2))
+                            iteration, eval_costs, train_timer, self.real_modifier.shape, total_loss, loss1, loss2, l2))
                         sys.stdout.flush()
-                    o_bestl2 = l2
-                    o_bestscore = torch.argmax(score)
-                    o_bestattack = nimg
-                    o_best_const = CONST
+                    outer_best_l2 = l2
+                    outer_best_score = torch.argmax(score)
+                    outer_best_attack = nimg
+                    outer_best_c = c
 
                 train_timer += time.time() - attack_begin_time
 
             # adjust the constant as needed
 
-            if compare(bestscore, torch.argmax(lab)) and bestscore != -1:
+            if is_confidently_fooled(best_score, torch.argmax(label_1hot)) and best_score != -1:
                 # success, divide const by two
-                print('old constant: ', CONST)
-                upper_bound = min(upper_bound, CONST)
-                if upper_bound < 1e9:
-                    CONST = (lower_bound + upper_bound)/2
-                print('new constant: ', CONST)
+                print('old c: ', c)
+                c_upper_bound = min(c_upper_bound, c)
+                if c_upper_bound < 1e9:
+                    c = (c_lower_bound + c_upper_bound)/2
+                print('new c: ', c)
             else:
                 # failure, either multiply by 10 if no solution found yet
                 #          or do binary search with the known upper bound
-                print('old constant: ', CONST)
-                lower_bound = max(lower_bound, CONST)
-                if upper_bound < 1e9:
-                    CONST = (lower_bound + upper_bound)/2
+                print('old c: ', c)
+                c_lower_bound = max(c_lower_bound, c)
+                if c_upper_bound < 1e9:
+                    c = (c_lower_bound + c_upper_bound)/2
                 else:
-                    CONST *= 10
-                print('new constant: ', CONST)
+                    c *= 10
+                print('new c: ', c)
 
         # return the best solution found
-        return o_bestattack, o_best_const
+        return outer_best_attack, outer_best_c
+
+    def attack(self, imgs, targets):
+        """
+        Perform the L_2 attack on the given images for the given targets.
+
+        If self.targeted is true, then the targets represents the target labels.
+        If self.targeted is false, then targets are the original class labels.
+        """
+        adv_images = torch.zeros_like(imgs)
+        print('go up to', len(imgs))
+        # we can only run 1 image at a time, minibatches are used for gradient evaluation
+        for i in range(0, len(imgs)):
+            print('tick', i)
+            adv_images[i] = self.attack_batch(imgs[i], targets[i])[0]
+
+        return adv_images
 
 
 def generate_data(data, samples, targeted=True, start=0, inception=False):
@@ -753,29 +772,30 @@ def generate_data(data, samples, targeted=True, start=0, inception=False):
     inception: if targeted and inception, randomly sample 100 targets intead of 1000
     """
     inputs = []
-    targets = []
+    targets_1hot = []
     for i in range(samples):
         if targeted:
             if inception:
                 seq = random.sample(range(1, 1001), 10)
             else:
-                seq = range(data.test_labels.shape[1])
+                seq = range(data.test_labels_1hot.shape[1])
 
             # print ('image label:', torch.argmax(data.test_labels[start+i]))
             for j in seq:
                 # skip the original image label
-                if (j == torch.argmax(data.test_labels[start+i])) and (inception == False):
+                if (j == torch.argmax(data.test_labels_1hot[start+i])) and (inception == False):
                     continue
                 inputs.append(data.test_data[start+i])
-                targets.append(torch.eye(data.test_labels.shape[1])[j])
+                targets_1hot.append(
+                    torch.eye(data.test_labels_1hot.shape[1])[j])
         else:
             inputs.append(data.test_data[start+i])
-            targets.append(data.test_labels[start+i])
+            targets_1hot.append(data.test_labels_1hot[start+i])
 
     inputs = torch.tensor(inputs).permute(0, 3, 1, 2)
-    targets = torch.tensor(targets)
+    targets_1hot = torch.tensor(targets_1hot)
 
-    return inputs, targets
+    return inputs, targets_1hot
 
 
 if __name__ == "__main__":
@@ -789,7 +809,7 @@ if __name__ == "__main__":
 
     _, test_loader = cifar10(args)
     test_loader.test_data = test_loader.dataset.data/255-0.5
-    test_loader.test_labels = np.eye(10)[test_loader.dataset.targets]
+    test_loader.test_labels_1hot = np.eye(10)[test_loader.dataset.targets]
 
     use_cuda = args.use_gpu and torch.cuda.is_available()
     device = torch.device("cuda" if use_cuda else "cpu")
@@ -811,11 +831,11 @@ if __name__ == "__main__":
     model.num_labels = 10
 
     inputs, targets = generate_data(test_loader, samples=10, targeted=False,
-                                    start=5621, inception=False)
+                                    start=6, inception=False)
     inputs, targets = inputs.to(device), targets.to(device)
 
     attack = BlackBoxL2(model, batch_size=128,
-                        max_iterations=1000, confidence=0, use_log=use_log, device=device)
+                        max_iterations=1000, confidence=0, use_log=use_log, device=device, solver="adam")
 
     # inputs = inputs[1:2]
     # targets = targets[1:2]
@@ -831,4 +851,5 @@ if __name__ == "__main__":
     print("Adversarial Classification:", np.argsort(
         model(adv.reshape((1,) + adv.shape)+0.5))[-1:-6:-1])
 
-    print("Total distortion:", np.sum((adv-inputs[0])**2)**.5)
+    print("Average distortion: ", torch.mean(
+        torch.sum((adv[fooled_indices]-inputs[fooled_indices])**2, dim=(1, 2, 3))**.5).item())
