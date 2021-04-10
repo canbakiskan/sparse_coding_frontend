@@ -82,7 +82,7 @@ def main():
     device = torch.device("cuda" if use_cuda else "cpu")
 
     read_from_file = (args.adv_testing.box_type ==
-                      "other" and args.adv_testing.otherbox_type == "transfer") or not recompute
+                      "other" and args.adv_testing.otherbox_method == "transfer") or not recompute
 
     if read_from_file:
         args.adv_testing.save = False

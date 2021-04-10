@@ -97,12 +97,12 @@ def get_arguments():
     )
 
     adv_testing.add_argument(
-        "--attack_otherbox_type",
+        "--attack_otherbox_method",
         type=str,
         default="boundary",
-        choices=["transfer", "boundary", "hopskip", "genattack"],
+        choices=["transfer", "boundary", "hopskip", "genattack", "zoo"],
         metavar="",
-        help="Other box (black, pseudowhite) attack type",
+        help="Other box (black, pseudowhite) attack method",
     )
 
     adv_testing.add_argument(

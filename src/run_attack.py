@@ -52,12 +52,12 @@ def generate_attack(args, model, data, target, adversarial_args):
         return perturbation
 
     elif args.adv_testing.box_type == "other":
-        if args.adv_testing.otherbox_type == "transfer":
+        if args.adv_testing.otherbox_method == "transfer":
             # it shouldn't enter this clause
             raise Exception(
                 "Something went wrong, transfer attack shouldn't be using generate_attack")
 
-        elif args.adv_testing.otherbox_type == "boundary":
+        elif args.adv_testing.otherbox_method == "boundary":
             import foolbox as fb
 
             fmodel = fb.PyTorchModel(model, bounds=(0, 1))
@@ -70,7 +70,7 @@ def generate_attack(args, model, data, target, adversarial_args):
                 starting_points=adversarial_args["attack_args"]["starting_points"])
             return raw_advs[0] - data
 
-        elif args.adv_testing.otherbox_type == "hopskip":
+        elif args.adv_testing.otherbox_method == "hopskip":
             import foolbox as fb
 
             fmodel = fb.PyTorchModel(model, bounds=(0, 1))
@@ -126,7 +126,7 @@ def main():
     device = torch.device("cuda" if use_cuda else "cpu")
 
     read_from_file = (args.adv_testing.box_type ==
-                      "other" and args.adv_testing.otherbox_type == "transfer") or not recompute
+                      "other" and args.adv_testing.otherbox_method == "transfer") or not recompute
 
     if read_from_file:
         args.adv_testing.save = False
@@ -236,7 +236,7 @@ def main():
 
     start = time.time()
 
-    if args.adv_testing.box_type == "other" and (args.adv_testing.otherbox_type == "boundary" or args.adv_testing.otherbox_type == "hopskip") and not read_from_file:
+    if args.adv_testing.box_type == "other" and (args.adv_testing.otherbox_method == "boundary" or args.adv_testing.otherbox_method == "hopskip") and not read_from_file:
         img_distances_idx = np.load(
             f'./data/image_distances/{args.dataset.name}/closest_img_indices.npy')
         preds = torch.zeros(10000, dtype=torch.int)
@@ -272,7 +272,7 @@ def main():
         target = target.to(device)
 
         if not read_from_file:
-            if args.adv_testing.box_type == "other" and (args.adv_testing.otherbox_type == "boundary" or args.adv_testing.otherbox_type == "hopskip"):
+            if args.adv_testing.box_type == "other" and (args.adv_testing.otherbox_method == "boundary" or args.adv_testing.otherbox_method == "hopskip"):
                 adversarial_args['attack_args']['starting_points'] = closest_images[batch_idx
                                                                                     * args.neural_net.test_batch_size: (batch_idx + 1)
                                                                                     * args.neural_net.test_batch_size].to(device)
