@@ -63,6 +63,41 @@ def coordinate_ADAM(losses, indice, grad, hess, batch_size, mt_arr, vt_arr, real
     adam_epoch[indice] = epoch + 1
 
 
+def coordinate_ADAM_torch(losses, indice, grad, hess, batch_size, mt_arr, vt_arr, real_modifier, up, down, lr, adam_epoch, beta1, beta2, proj):
+    # indice = torch.tensor(range(0, 3*299*299), dtype = torch.int64)
+    for i in range(batch_size):
+        grad[i] = (losses[i*2+1] - losses[i*2+2]) / 0.0002
+    # true_grads = self.sess.run(self.grad_op, feed_dict={self.modifier: self.real_modifier})
+    # true_grads, losses, l2s, scores, nimgs = self.sess.run([self.grad_op, self.total_loss, self.l2dist, self.output, self.newimg], feed_dict={self.modifier: self.real_modifier})
+    # grad = true_grads[0].reshape(-1)[indice]
+    # print(grad, true_grads[0].reshape(-1)[indice])
+    # self.real_modifier.reshape(-1)[indice] -= self.LEARNING_RATE * grad
+    # self.real_modifier -= self.LEARNING_RATE * true_grads[0]
+    # ADAM update
+
+    mt = mt_arr[indice]
+    mt = beta1 * mt + (1 - beta1) * grad
+    mt_arr[indice] = mt
+    vt = vt_arr[indice]
+    vt = beta2 * vt + (1 - beta2) * (grad * grad)
+    vt_arr[indice] = vt
+    # epoch is an array; for each index we can have a different epoch number
+    epoch = adam_epoch[indice]
+    corr = (torch.sqrt(1 - torch.pow(beta2, epoch))) / \
+        (1 - torch.pow(beta1, epoch))
+    m = real_modifier.reshape(-1)
+    old_val = m[indice]
+    old_val -= lr * corr * mt / (torch.sqrt(vt) + 1e-8)
+    # set it back to [-0.5, +0.5] region is tanh is used
+    if proj:
+        old_val = torch.maximum(torch.minimum(
+            old_val, up[indice]), down[indice])
+    # print(grad)
+    # print(old_val - m[indice])
+    m[indice] = old_val
+    adam_epoch[indice] = epoch + 1
+
+
 @jit(nopython=True)
 def coordinate_Newton(losses, indice, grad, hess, batch_size, mt_arr, vt_arr, real_modifier, up, down, lr, adam_epoch, beta1, beta2, proj):
     # def sign(x):
@@ -251,9 +286,9 @@ class BlackBoxL2:
         var_size = self.small_x * self.small_y * self.num_channels
         self.use_var_len = var_size
         self.var_list = torch.tensor(
-            range(0, self.use_var_len), dtype=torch.int32, device=self.device)
+            range(0, self.use_var_len), dtype=torch.int64, device=self.device)
         self.used_var_list = torch.zeros(
-            var_size, dtype=torch.int32, device=self.device)
+            var_size, dtype=torch.int64, device=self.device)
         self.sample_prob = torch.ones(
             var_size, dtype=torch.float32, device=self.device) / var_size
 
@@ -268,17 +303,17 @@ class BlackBoxL2:
         self.perm_index = 0
 
         # ADAM status
-        self.mt = np.zeros(
-            var_size, dtype=np.float32)
-        self.vt = np.zeros(
-            var_size, dtype=np.float32)
+        self.mt = torch.zeros(
+            var_size, dtype=torch.float32, device=self.device)
+        self.vt = torch.zeros(
+            var_size, dtype=torch.float32, device=self.device)
         # self.beta1 = 0.8
         # self.beta2 = 0.99
         self.beta1 = adam_beta1
         self.beta2 = adam_beta2
         self.reset_adam_after_found = reset_adam_after_found
-        self.adam_epoch = np.ones(
-            var_size, dtype=np.int32)
+        self.adam_epoch = torch.ones(
+            var_size, dtype=torch.int64, device=self.device)
         self.stage = 0
         # variables used during optimization process
         self.grad = torch.zeros(
@@ -295,6 +330,8 @@ class BlackBoxL2:
         self.solver_name = solver
         if solver == "adam":
             self.solver = coordinate_ADAM
+        if solver == "adam_torch":
+            self.solver = coordinate_ADAM_torch
         elif solver == "newton":
             self.solver = coordinate_Newton
         elif solver == "adam_newton":
@@ -341,14 +378,14 @@ class BlackBoxL2:
         var_size = self.small_x * self.small_y * self.num_channels
         self.use_var_len = var_size
         self.var_list = torch.tensor(
-            range(0, self.use_var_len), dtype=torch.int32, device=self.device)
+            range(0, self.use_var_len), dtype=torch.int64, device=self.device)
         # ADAM status
-        self.mt = np.zeros(
-            var_size, dtype=np.float32)
-        self.vt = np.zeros(
-            var_size, dtype=np.float32)
-        self.adam_epoch = np.ones(
-            var_size, dtype=np.int32)
+        self.mt = torch.zeros(
+            var_size, dtype=torch.float32, device=self.device)
+        self.vt = torch.zeros(
+            var_size, dtype=torch.float32, device=self.device)
+        self.adam_epoch = torch.ones(
+            var_size, dtype=torch.int64, device=self.device)
         # update sample probability
         if reset_only:
             self.sample_prob = torch.ones(
@@ -372,7 +409,7 @@ class BlackBoxL2:
         # print(true_grads[0])
         epoch = self.adam_epoch[0]
         mt = self.beta1 * self.mt + (1 - self.beta1) * grad
-        vt = self.beta2 * self.vt + (1 - self.beta2) * np.square(grad)
+        vt = self.beta2 * self.vt + (1 - self.beta2) * torch.square(grad)
         corr = (math.sqrt(1 - self.beta2 ** epoch)) / (1 - self.beta1 ** epoch)
         # print(grad.shape, mt.shape, vt.shape, self.real_modifier.shape)
         # m is a *view* of self.real_modifier
@@ -436,11 +473,9 @@ class BlackBoxL2:
         # coordinate_ADAM(losses, indice, self.grad, self.hess, self.batch_size, self.mt, self.vt, self.real_modifier, self.modifier_up, self.modifier_down, self.LEARNING_RATE, self.adam_epoch, self.beta1, self.beta2, not self.use_tanh, true_grads)
         # coordinate_Newton(losses, indice, self.grad, self.hess, self.batch_size, self.mt, self.vt, self.real_modifier, self.modifier_up, self.modifier_down, self.LEARNING_RATE, self.adam_epoch, self.beta1, self.beta2, not self.use_tanh)
         # coordinate_Newton_ADAM(losses, indice, self.grad, self.hess, self.batch_size, self.mt, self.vt, self.real_modifier, self.modifier_up, self.modifier_down, self.LEARNING_RATE, self.adam_epoch, self.beta1, self.beta2, not self.use_tanh)
-        real_modifier_numpy = self.real_modifier.cpu().numpy()
-        self.solver(losses.cpu().numpy(), indice.cpu().numpy(), self.grad.cpu().numpy(), self.hess.cpu().numpy(), self.batch_size, self.mt, self.vt, real_modifier_numpy,
-                    self.modifier_up.cpu().numpy(), self.modifier_down.cpu().numpy(), self.LEARNING_RATE, self.adam_epoch, self.beta1, self.beta2, not self.use_tanh)
-        self.real_modifier = torch.from_numpy(
-            real_modifier_numpy).to(self.device)
+        self.solver(losses, indice, self.grad, self.hess, self.batch_size, self.mt, self.vt, self.real_modifier,
+                    self.modifier_up, self.modifier_down, self.LEARNING_RATE, self.adam_epoch, self.beta1, self.beta2, not self.use_tanh)
+
         # adjust sample probability, sample around the points with large gradient
         if self.save_ckpts:
             torch.save(self.real_modifier, '{}/iter{}'.format(self.save_ckpts,
@@ -603,9 +638,9 @@ class BlackBoxL2:
         outer_best_l2 = 1e10
         outer_best_score = -1
         if self.use_tanh:
-            outer_best_attack = torch.tanh(img)/2
+            outer_best_adv = torch.tanh(img)/2
         else:
-            outer_best_attack = img
+            outer_best_adv = img
 
         for outer_step in range(self.BINARY_SEARCH_STEPS):
             print(outer_best_l2)
@@ -625,7 +660,7 @@ class BlackBoxL2:
             # self.setup = [self.true_img, self.true_label_1hot, self.c]
 
             # use the current best model
-            # np.copyto(self.real_modifier, outer_best_attack - img)
+            # np.copyto(self.real_modifier, outer_best_adv - img)
             # use the model left by last constant change
 
             prev_loss = 1e6
@@ -642,9 +677,9 @@ class BlackBoxL2:
                         self.real_modifier.requires_grad = True
 
             # reset ADAM status
-            self.mt.fill(0.0)
-            self.vt.fill(0.0)
-            self.adam_epoch.fill(1)
+            self.mt.fill_(0.0)
+            self.vt.fill_(0.0)
+            self.adam_epoch.fill_(1)
             self.stage = 0
             multiplier = 1
             eval_costs = 0
@@ -691,9 +726,9 @@ class BlackBoxL2:
                     # we have reached the fine tunning point
                     # reset ADAM to avoid overshoot
                     if self.reset_adam_after_found:
-                        self.mt.fill(0.0)
-                        self.vt.fill(0.0)
-                        self.adam_epoch.fill(1)
+                        self.mt.fill_(0.0)
+                        self.vt.fill_(0.0)
+                        self.adam_epoch.fill_(1)
                     self.stage = 1
                 last_loss1 = loss1
 
@@ -720,7 +755,7 @@ class BlackBoxL2:
                         sys.stdout.flush()
                     outer_best_l2 = l2
                     outer_best_score = torch.argmax(score)
-                    outer_best_attack = nimg
+                    outer_best_adv = nimg
                     outer_best_c = c
 
                 train_timer += time.time() - attack_begin_time
@@ -745,8 +780,11 @@ class BlackBoxL2:
                     c *= 10
                 print('new c: ', c)
 
+        if self.use_tanh:
+            img = torch.tanh(img)/2
+
         # return the best solution found
-        return outer_best_attack, outer_best_c
+        return outer_best_adv, outer_best_c
 
     def attack(self, imgs, targets):
         """
