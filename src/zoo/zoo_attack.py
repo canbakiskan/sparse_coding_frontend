@@ -19,6 +19,7 @@ import matplotlib.pyplot as plt
 import torch
 import torch.nn.functional as F
 from torchvision import transforms, datasets
+from ..utils.namers import attack_file_namer
 
 
 BINARY_SEARCH_STEPS = 9  # number of times to adjust the constant with binary search
@@ -600,6 +601,13 @@ class BlackBoxL2:
             else:
                 return z != true_label
 
+        # convert img to float32 to avoid numba error
+        img = img.type(torch.float32)
+
+        if torch.argmax(model(img+0.5)) != torch.argmax(label_1hot):
+            print("Image is already misclassified.")
+            return img, 0.0
+
         # remove the extra batch dimension
         if len(img.shape) == 4:
             img = img[0]
@@ -613,9 +621,6 @@ class BlackBoxL2:
         c_lower_bound = 0.0
         c = self.initial_c
         c_upper_bound = 1e10
-
-        # convert img to float32 to avoid numba error
-        img = img.type(torch.float32)
 
         # set the upper and lower bounds for the modifier
         if not self.use_tanh:
@@ -814,7 +819,13 @@ def generate_data(data, samples, targeted=True, start=0, inception=False):
     """
     inputs = []
     targets_1hot = []
-    for i in range(samples):
+    i = 0
+    samples_sofar = 0
+    while samples_sofar < samples:
+        i += 1
+        if torch.argmax(model(torch.tensor(data.test_data[start+i:start+i+1]+0.5, device="cuda", dtype=torch.float32).permute(0, 3, 1, 2))) != np.argmax(data.test_labels_1hot[start+i]):
+            continue
+
         if targeted:
             if inception:
                 seq = random.sample(range(1, 1001), 10)
@@ -832,6 +843,8 @@ def generate_data(data, samples, targeted=True, start=0, inception=False):
         else:
             inputs.append(data.test_data[start+i])
             targets_1hot.append(data.test_labels_1hot[start+i])
+
+        samples_sofar += 1
 
     inputs = torch.tensor(inputs).permute(0, 3, 1, 2)
     targets_1hot = torch.tensor(targets_1hot)
