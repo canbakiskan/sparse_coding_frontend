@@ -136,6 +136,9 @@ class encoder(nn.Module, noisy):
         if self.conv.weight.requires_grad:  # this means ablation.no_dictionary=True
             self.update_l1_norms()
 
+        if x.ndim == 3:
+            x = x.view(1, *x.shape)
+
         x = self.conv(x)
 
         if "noisy" in self.frontend_arch:
