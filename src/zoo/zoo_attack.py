@@ -843,10 +843,13 @@ if __name__ == "__main__":
     from ..parameters import get_arguments
 
     args = get_arguments()
+    args.adv_testing.box_type = "other"
+    args.adv_testing.otherbox_method = "zoo"
 
     np.random.seed(42)
     torch.manual_seed(42)
     use_log = True
+    use_tanh = True
 
     _, test_loader = cifar10(args)
     test_loader.test_data = test_loader.dataset.data/255-0.5
@@ -871,12 +874,13 @@ if __name__ == "__main__":
     model.image_size = 32
     model.num_labels = 10
 
-    inputs, targets = generate_data(test_loader, samples=10, targeted=False,
-                                    start=6, inception=False)
+    nb_samples = args.adv_testing.nb_imgs
+    inputs, targets = generate_data(test_loader, samples=nb_samples, targeted=False,
+                                    start=np.random.randint(0, 10000-nb_samples), inception=False)
     inputs, targets = inputs.to(device), targets.to(device)
 
     attack = BlackBoxL2(model, batch_size=128,
-                        max_iterations=1000, confidence=0, use_log=use_log, device=device, solver="adam")
+                        max_iterations=1000, confidence=0, use_log=use_log, device=device, solver="adam_torch", use_tanh=use_tanh)
 
     # inputs = inputs[1:2]
     # targets = targets[1:2]
@@ -890,36 +894,47 @@ if __name__ == "__main__":
     adv += 0.5
     inputs += 0.5
 
-    valid_class = np.argmax(model(inputs.float()).cpu().numpy(), -1)
+    true_class = np.argmax(targets.cpu().numpy(), -1)
+    clean_class = np.argmax(model(inputs.float()).cpu().numpy(), -1)
     adv_class = np.argmax(model(adv.float()).cpu().numpy(), -1)
 
-    acc = ((valid_class == adv_class).sum())/len(inputs)
-    print("Valid Classification: ", valid_class)
+    acc = ((true_class == adv_class).sum())/len(inputs)
+    print("True label: ", true_class)
+    print("Clean Classification: ", clean_class)
     print("Adversarial Classification: ", adv_class)
     print("Success Rate: ", (1.0-acc)*100.0)
 
-    fooled_indices = (valid_class != adv_class)
+    fooled_indices = (true_class != adv_class)
 
-    # breakpoint()
-    plt.figure(figsize=(10, 10))
-    for i in range(3):
-        plt.subplot(3, 3, 3*i+1)
-        plt.imshow(inputs[fooled_indices]
-                   [i].detach().cpu().permute(1, 2, 0).numpy())
-        plt.xticks([])
-        plt.yticks([])
-        plt.subplot(3, 3, 3*i+2)
-        plt.imshow(adv[fooled_indices]
-                   [i].detach().cpu().permute(1, 2, 0).numpy())
-        plt.xticks([])
-        plt.yticks([])
-        plt.subplot(3, 3, 3*i+3)
-        plt.imshow((adv[fooled_indices]-inputs[fooled_indices])
-                   [i].detach().cpu().permute(1, 2, 0).numpy())
-        plt.xticks([])
-        plt.yticks([])
-    plt.tight_layout()
-    plt.savefig('asd.pdf')
+    attack = adv-inputs
+
+    # plt.figure(figsize=(10, 10))
+    # for i in range(3):
+    #     plt.subplot(3, 3, 3*i+1)
+    #     plt.imshow(inputs[fooled_indices]
+    #                [i].detach().cpu().permute(1, 2, 0).numpy())
+    #     plt.xticks([])
+    #     plt.yticks([])
+    #     plt.subplot(3, 3, 3*i+2)
+    #     plt.imshow(adv[fooled_indices]
+    #                [i].detach().cpu().permute(1, 2, 0).numpy())
+    #     plt.xticks([])
+    #     plt.yticks([])
+    #     plt.subplot(3, 3, 3*i+3)
+    #     plt.imshow(attack[fooled_indices]
+    #                [i].detach().cpu().permute(1, 2, 0).numpy())
+    #     plt.xticks([])
+    #     plt.yticks([])
+    # plt.tight_layout()
+    # plt.savefig('asd.pdf')
 
     print("Average distortion: ", torch.mean(
         torch.sum((adv[fooled_indices]-inputs[fooled_indices])**2, dim=(1, 2, 3))**.5).item())
+
+    if args.adv_testing.save:
+        attack_filepath = attack_file_namer(args)
+
+        if not os.path.exists(os.path.dirname(attack_file_namer(args))):
+            os.makedirs(os.path.dirname(attack_file_namer(args)))
+
+        np.save(attack_filepath, adv.detach().cpu().numpy())
