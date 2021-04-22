@@ -44,14 +44,11 @@ save_checkpoint = true
 
     [neural_net.optimizer]
     name = "sgd" # sgd, adam, rms
-    lr_scheduler = "cyc" # cyc, mult, step
     momentum = 0.9 # for optimizers with momentum
     weight_decay = 0.0005
-    lr = 0.001 # starting lr except for cyclic scheduler
 
         [neural_net.optimizer.cyclic]
         lr_min = 0.0 # min LR for cyclic scheduler
-        lr_max = 0.02 # max LR for cyclic scheduler
 
 [adv_training]
 norm = "inf" # inf or a positive integer

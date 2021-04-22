@@ -55,6 +55,27 @@ def get_arguments():
         metavar="",
         help="Number of epochs in training",
     )
+    neural_net.add_argument(
+        "--neural_net_lr_scheduler",
+        type=str,
+        default="cyc",
+        choices=["cyc", "step", "mult"],
+        help="LR scheduler for training",
+    )
+
+    neural_net.add_argument(
+        "--neural_net_lr",
+        type=float,
+        default=0.01,
+        help="learning rate for training",
+    )
+
+    neural_net.add_argument(
+        "--neural_net_lr_max",
+        type=float,
+        default=0.02,
+        help="maximum learning rate for cyclic LR scheduler",
+    )
 
     # Adversarial training parameters
     adv_training = parser.add_argument_group(
@@ -289,7 +310,14 @@ def get_arguments():
 
     for arg, val in args.__dict__.items():
         if "neural_net" in arg:
-            setattr(config.neural_net, arg.replace("neural_net_", ""), val)
+            arg = arg.replace("neural_net_", "")
+            if arg == "lr_scheduler" or arg == "lr":
+                field = config.neural_net.optimizer
+            elif arg == "lr_max":
+                field = config.neural_net.optimizer.cyclic
+            else:
+                field = config.neural_net
+            setattr(field, arg, val)
         if "adv_training" in arg:
             setattr(config.adv_training, arg.replace("adv_training_", ""), val)
         if "attack_" in arg:
