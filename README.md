@@ -158,7 +158,6 @@ Run the corresponding bash script in `shell_scripts/ablation` to reproduce.
 ### Ablation Related Settings/Hyperparameters
 |Setting|Location|Default value|Choices|Help|
 |--|--|--|--|--|
-|distill|`config.toml`|false|bool|Whether to use the distilled model for the script being run (ablation)|
 |no_dictionary|`config.toml`|false|bool|Whether to use learnable parameters instead of the dictionary in the encoder (ablation)|
 
 ## Decoding File Names
@@ -219,7 +218,6 @@ Repository
 │	
 └───src     
     │   config.toml                          Less frequently changing settings
-    │   dct_generate                         To generate DCT basis (ablation)
     │   find_img_distances.py                Find closest images for decision boundary attack
     │   learn_patch_dict.py                  Sparse dictionary learning
     │   parameters.py                        Frequently changing settings
@@ -240,16 +238,14 @@ Repository
     │   │   tools.py                         Tools/functions used in models
     │   │
     │   └───ablation
-    │       │   distill_attack.py            will be removed
-    │       │   distill_train.py             will be removed
-    │       │   dropout_resnet.py            ResNet with dropout in the first layer (ablation)
-    │       │   resnet_after_encoder.py      ResNet with 500 filters in the first layer (ablation)
+    │       │   dct_generate                 To generate DCT basis
+    │       │   dropout_resnet.py            ResNet with dropout in the first layer
+    │       │   resnet_after_encoder.py      ResNet with 500 filters in the first layer
     │       │   sparse_frontend.py           Sparse frontend definition
     │
     └───plotting
     │   │   accuracy_vs_eps.py               Plots accuracy vs attack budget
     │   │   activation_bpda.py               Plots activation backward approximations
-    │   │   before_after_frontend.py         will be removed
     │   │   correlataion_plot.py             Plots first layer outputs of different models
     │   │   dct_hist.py                      will be removed 
     │   │   loss_landscape.py                Plots loss landscapes

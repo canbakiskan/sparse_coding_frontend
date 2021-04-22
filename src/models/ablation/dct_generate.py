@@ -1,5 +1,5 @@
-from .parameters import get_arguments
-from .utils.namers import dict_file_namer
+from ...parameters import get_arguments
+from ...utils.namers import dict_file_namer
 import numpy as np
 from scipy.fftpack import dct
 import matplotlib.pyplot as plt
