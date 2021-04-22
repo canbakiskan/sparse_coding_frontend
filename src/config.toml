@@ -69,4 +69,6 @@ nb_imgs = -1 # if a positive number, only that many images are tested
 
 rfgsm_alpha = 0.03921568627 # RFGSM step size
 
+zoo_use_tanh = true
+
 [ablation]

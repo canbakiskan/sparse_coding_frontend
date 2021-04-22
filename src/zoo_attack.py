@@ -7,20 +7,20 @@ import scipy.misc
 from numba import jit
 import math
 import time
-from ..utils.get_modules import (
+from .utils.get_modules import (
     get_classifier,
     get_frontend,
 )
-from ..models.combined import Combined
-from ..utils.read_datasets import(
+from .models.combined import Combined
+from .utils.read_datasets import(
     cifar10
 )
 import matplotlib.pyplot as plt
 import torch
 import torch.nn.functional as F
-from torchvision import transforms, datasets
-from ..utils.namers import attack_file_namer
-
+from .utils.namers import attack_file_namer, attack_log_namer
+from os import path
+from .parameters import get_arguments
 
 BINARY_SEARCH_STEPS = 9  # number of times to adjust the constant with binary search
 MAX_ITERATIONS = 1000   # number of iterations to perform gradient descent
@@ -853,16 +853,28 @@ def generate_data(data, samples, targeted=True, start=0, inception=False):
 
 
 if __name__ == "__main__":
-    from ..parameters import get_arguments
 
     args = get_arguments()
     args.adv_testing.box_type = "other"
     args.adv_testing.otherbox_method = "zoo"
 
+    recompute = True
+    if path.exists(attack_file_namer(args)):
+        print(
+            "Attack already exists. Do you want to recompute? [y/(n)]", end=" ")
+        response = input()
+        sys.stdout.write("\033[F")
+        sys.stdout.write("\033[K")
+        if response != "y":
+            recompute = False
+
+    if not os.path.exists(os.path.dirname(attack_log_namer(args))):
+        os.makedirs(os.path.dirname(attack_log_namer(args)))
+
     np.random.seed(42)
     torch.manual_seed(42)
     use_log = True
-    use_tanh = True
+    use_tanh = args.adv_testing.zoo_use_tanh
 
     _, test_loader = cifar10(args)
     test_loader.test_data = test_loader.dataset.data/255-0.5
@@ -892,26 +904,33 @@ if __name__ == "__main__":
                                     start=np.random.randint(0, 10000-nb_samples), inception=False)
     inputs, targets = inputs.to(device), targets.to(device)
 
-    attack = BlackBoxL2(model, batch_size=128,
-                        max_iterations=1000, confidence=0, use_log=use_log, device=device, solver="adam_torch", use_tanh=use_tanh)
+    if recompute:
+        attack = BlackBoxL2(model, batch_size=128,
+                            max_iterations=1000, confidence=0, use_log=use_log, device=device, solver="adam_torch", use_tanh=use_tanh)
 
-    # inputs = inputs[1:2]
-    # targets = targets[1:2]
-    timestart = time.time()
-    adv = attack.attack(inputs, targets)
-    timeend = time.time()
+        # inputs = inputs[1:2]
+        # targets = targets[1:2]
+        timestart = time.time()
+        adv = attack.attack(inputs, targets)
+        timeend = time.time()
 
-    print("Took", timeend-timestart,
-          "seconds to run", len(inputs), "samples.")
+        print("Took", timeend-timestart,
+              "seconds to run", len(inputs), "samples.")
 
-    adv += 0.5
-    inputs += 0.5
+        adv += 0.5
 
-    true_class = np.argmax(targets.cpu().numpy(), -1)
-    clean_class = np.argmax(model(inputs.float()).cpu().numpy(), -1)
-    adv_class = np.argmax(model(adv.float()).cpu().numpy(), -1)
+    else:
+        adv = torch.tensor(np.load(attack_file_namer(args)), device=device)
 
-    acc = ((true_class == adv_class).sum())/len(inputs)
+    with torch.no_grad():
+
+        inputs += 0.5
+
+        true_class = np.argmax(targets.cpu().numpy(), -1)
+        clean_class = np.argmax(model(inputs.float()).cpu().numpy(), -1)
+        adv_class = np.argmax(model(adv.float()).cpu().numpy(), -1)
+
+        acc = ((true_class == adv_class).sum())/len(inputs)
     print("True label: ", true_class)
     print("Clean Classification: ", clean_class)
     print("Adversarial Classification: ", adv_class)

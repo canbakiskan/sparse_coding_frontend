@@ -127,6 +127,9 @@ def attack_params_string(args):
         attack_params_string += f"_{args.adv_testing.otherbox_method}"
         attack_params_string += f"_eps_{np.int(np.round(args.adv_testing.budget*255))}"
 
+        if args.adv_testing.zoo_use_tanh:
+            attack_params_string += f"_tanh"
+
     elif args.adv_testing.box_type == "white":
 
         if args.adv_testing.norm != 'inf':
