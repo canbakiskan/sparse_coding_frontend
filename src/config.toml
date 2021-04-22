@@ -1,6 +1,5 @@
 seed = 2021 # random seed
 use_gpu = true
-log_interval = 100 # how many batches to wait before logging training status
 
 [dataset]
 name = "CIFAR10" # CIFAR10, Imagenet, Imagenette, Tiny-ImageNet
