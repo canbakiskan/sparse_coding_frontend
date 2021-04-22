@@ -215,7 +215,7 @@ def classifier_log_namer(args):
 
 def attack_file_namer(args):
 
-    file_path = args.directory + f"data/attacked_dataset/{args.dataset.name}/"
+    file_path = args.directory + f"data/attacked_datasets/{args.dataset.name}/"
 
     file_path += attack_params_string(args)
     file_path += "_"
