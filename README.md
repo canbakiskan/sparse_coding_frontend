@@ -135,16 +135,14 @@ Run the corresponding bash script in `shell_scripts/ablation` to reproduce.
 |--|--|--|--|--|
 |activation_backward|`parameters.py`|"smooth"|"smooth","identity"|If activation is used in the encoder, what should the backward pass approximation be|
 |activation_backward_steepness|`parameters.py`|4.0|float|If activation_backward=smooth, how smooth the approximation should be (higher less smooth)|
-|box_type|`parameters.py`|"white"|"white","other"|Is the attack whitebox or some type of blackbox|
 |budget|`parameters.py`|0.03137254901960784|float|Attack budget epsilon|
 |dropout_backward|`parameters.py`|"default"|"identity","default"|If dropout is used in the encoder, what should the backward pass be|
 |EOT_size|`parameters.py`|40|int|If EOT is used in the attack, number of gradients to average over|
-|method|`parameters.py`|"PGD"|PGD_EOT","PGD_smooth","FGSM","RFGSM","PGD","PGD_EOT","PGD_EOT_normalized","PGD_EOT_sign","CWlinf_EOT",            "CWlinf_EOT_normalized","CWlinf"|Attack method|
+|method|`parameters.py`|"PGD"|PGD_EOT","PGD_smooth","FGSM","RFGSM","PGD","PGD_EOT","PGD_EOT_normalized","PGD_EOT_sign","CWlinf_EOT", "CWlinf_EOT_normalized", "CWlinf", "transfer", "boundary", "hopskip", "genattack"|Attack method|
 |nb_imgs|`config.toml`| -1|uint,-1|Number of test images to process|
 |nb_restarts|`parameters.py`|100|int|If a variant of PGD or CWlinf is used number of random restarts|
 |nb_steps|`parameters.py`|40|int|Number of attack steps|
 |norm|`parameters.py`|"inf"|"inf",int|Attack norm (p in L^p)|
-|otherbox_type|`parameters.py`|"boundary"|"transfer", "boundary", "hopskip", "genattack"|Blackbox attack type|
 |progress_bar|`config.toml`|true|bool|Whether to show progess bar in the command line while attacking|
 |rand|`parameters.py`|true|bool|Whether to use random restarts. Defaults to true if nb_restarts>1|
 |rfgsm_alpha|`config.toml`|0.03921568627|float|Alpha in RFGSM|
@@ -153,7 +151,7 @@ Run the corresponding bash script in `shell_scripts/ablation` to reproduce.
 |step_size|`parameters.py`|0.00392156862745098|float|Attack step size delta|
 |top_T_backward|`parameters.py`|"top_U"|"default", "top_U"|If top T operation is used in the encoder, what should the backward pass be. "top_U" means gradients are propagated through top U coefficients|
 |top_U|`parameters.py`|30|int|If top_T_backward="top_U", the value of U|
-|transfer_file|`parameters.py`|None|filepath|If otherbox_type="transfer", which attack file to apply|
+|transfer_file|`parameters.py`|None|filepath|If attack.method="transfer", which attack file to apply|
 
 ### Ablation Related Settings/Hyperparameters
 |Setting|Location|Default value|Choices|Help|

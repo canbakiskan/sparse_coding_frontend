@@ -45,7 +45,7 @@ def tiny_imagenet_from_file(args):
     kwargs = {"num_workers": 1, "pin_memory": True} if use_cuda else {}
 
     # Read
-    if args.adv_testing.box_type == "other" and args.adv_testing.otherbox_method == "transfer":
+    if args.adv_testing.method == "transfer":
         filepath = (
             args.directory
             + "data/attacked_datasets/"
@@ -155,7 +155,7 @@ def imagenette_from_file(args):
     kwargs = {"num_workers": 1, "pin_memory": True} if use_cuda else {}
 
     # Read
-    if args.adv_testing.box_type == "other" and args.adv_testing.otherbox_method == "transfer":
+    if args.adv_testing.method == "transfer":
         filepath = (
             args.directory
             + "data/attacked_datasets/"
@@ -268,7 +268,7 @@ def cifar10_from_file(args):
     kwargs = {"num_workers": 1, "pin_memory": True} if use_cuda else {}
 
     # Read
-    if args.adv_testing.box_type == "other" and args.adv_testing.otherbox_method == "transfer":
+    if args.adv_testing.method == "transfer":
         filepath = (
             args.directory
             + "data/attacked_datasets/"

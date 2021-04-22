@@ -51,7 +51,7 @@ def generate_attack(args, model, data, target, adversarial_args):
 
         return perturbation
 
-    elif args.adv_testing.box_type == "other":
+    elif args.adv_testing.box_type == "black":
         if args.adv_testing.otherbox_method == "transfer":
             # it shouldn't enter this clause
             raise Exception(
@@ -125,8 +125,7 @@ def main():
     use_cuda = args.use_gpu and torch.cuda.is_available()
     device = torch.device("cuda" if use_cuda else "cpu")
 
-    read_from_file = (args.adv_testing.box_type ==
-                      "other" and args.adv_testing.otherbox_method == "transfer") or not recompute
+    read_from_file = args.adv_testing.method == "transfer" or not recompute
 
     if read_from_file:
         args.adv_testing.save = False
@@ -236,7 +235,7 @@ def main():
 
     start = time.time()
 
-    if args.adv_testing.box_type == "other" and (args.adv_testing.otherbox_method == "boundary" or args.adv_testing.otherbox_method == "hopskip") and not read_from_file:
+    if (args.adv_testing.method == "boundary" or args.adv_testing.method == "hopskip") and not read_from_file:
         img_distances_idx = np.load(
             f'./data/image_distances/{args.dataset.name}/closest_img_indices.npy')
         preds = torch.zeros(10000, dtype=torch.int)
@@ -272,7 +271,7 @@ def main():
         target = target.to(device)
 
         if not read_from_file:
-            if args.adv_testing.box_type == "other" and (args.adv_testing.otherbox_method == "boundary" or args.adv_testing.otherbox_method == "hopskip"):
+            if (args.adv_testing.method == "boundary" or args.adv_testing.method == "hopskip"):
                 adversarial_args['attack_args']['starting_points'] = closest_images[batch_idx
                                                                                     * args.neural_net.test_batch_size: (batch_idx + 1)
                                                                                     * args.neural_net.test_batch_size].to(device)

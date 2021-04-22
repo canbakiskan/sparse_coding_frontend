@@ -81,8 +81,7 @@ def main():
     use_cuda = args.use_gpu and torch.cuda.is_available()
     device = torch.device("cuda" if use_cuda else "cpu")
 
-    read_from_file = (args.adv_testing.box_type ==
-                      "other" and args.adv_testing.otherbox_method == "transfer") or not recompute
+    read_from_file = args.adv_testing.method == "transfer" or not recompute
 
     if read_from_file:
         args.adv_testing.save = False

@@ -122,10 +122,9 @@ def classifier_params_string(args):
 
 
 def attack_params_string(args):
-    attack_params_string = f"{args.adv_testing.box_type}"
-    if args.adv_testing.box_type == "other":
+    attack_params_string = ""
+    if args.adv_testing.box_type == "black":
         attack_params_string += f"_{args.adv_testing.otherbox_method}"
-        attack_params_string += f"_eps_{np.int(np.round(args.adv_testing.budget*255))}"
 
         if args.adv_testing.zoo_use_tanh:
             attack_params_string += f"_tanh"

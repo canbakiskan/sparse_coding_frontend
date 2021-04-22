@@ -109,24 +109,6 @@ def get_arguments():
     )
 
     adv_testing.add_argument(
-        "--attack_box_type",
-        type=str,
-        default="white",
-        choices=["other", "white"],
-        metavar="other/white",
-        help="Box type",
-    )
-
-    adv_testing.add_argument(
-        "--attack_otherbox_method",
-        type=str,
-        default="boundary",
-        choices=["transfer", "boundary", "hopskip", "genattack", "zoo"],
-        metavar="",
-        help="Other box (black, pseudowhite) attack method",
-    )
-
-    adv_testing.add_argument(
         "--attack_transfer_file",
         type=str,
         default=None,
@@ -150,6 +132,11 @@ def get_arguments():
             "CWlinf_EOT",
             "CWlinf_EOT_normalized",
             "CWlinf",
+            "transfer",
+            "boundary",
+            "hopskip",
+            "genattack",
+            "zoo"
         ],
         help="Attack method for white/semiwhite box attacks",
     )
@@ -341,5 +328,22 @@ def get_arguments():
     if config.dictionary.type == "dct":
         from numpy import product
         config.dictionary.nb_atoms = product(config.defense.patch_shape)
+
+    if args.adv_testing.method in [
+        "PGD_EOT",
+        "PGD_smooth",
+        "FGSM",
+        "RFGSM",
+        "PGD",
+        "PGD_EOT",
+        "PGD_EOT_normalized",
+        "PGD_EOT_sign",
+        "CWlinf_EOT",
+        "CWlinf_EOT_normalized",
+        "CWlinf",
+    ]:
+        args.adv_testing.box_type = "white"
+    else:
+        args.adv_testing.box_type = "black"
 
     return config
