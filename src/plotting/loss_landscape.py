@@ -7,11 +7,7 @@ from ..utils.get_modules import (
 import torch
 from ..models.combined import Combined
 
-from ..utils.read_datasets import(
-    cifar10,
-    tiny_imagenet,
-    imagenette,
-)
+from ..utils.read_datasets import read_dataset
 
 import logging
 from deepillusion.torchattacks.analysis.plot import loss_landscape
@@ -46,14 +42,7 @@ def main():
         p.requires_grad = False
 
     # this is just for the adversarial test below
-    if args.dataset.name == "CIFAR10":
-        _, test_loader = cifar10(args)
-    elif args.dataset.name == "Tiny-ImageNet":
-        _, test_loader = tiny_imagenet(args)
-    elif args.dataset.name == "Imagenette":
-        _, test_loader = imagenette(args)
-    else:
-        raise NotImplementedError
+    _, test_loader = read_dataset(args)
 
     data_params = {"x_min": 0.0, "x_max": 1.0}
 

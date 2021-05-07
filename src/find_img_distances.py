@@ -1,6 +1,6 @@
 import numpy as np
 from .parameters import get_arguments
-from .utils.read_datasets import cifar10, tiny_imagenet, imagenette
+from .utils.read_datasets import read_dataset
 from tqdm import trange
 import os
 
@@ -9,14 +9,7 @@ args = get_arguments()
 
 if not os.path.exists(args.directory + f'data/image_distances/{args.dataset.name}/closest_img_indices.npy'):
 
-    if args.dataset.name == "CIFAR10":
-        _, test_loader = cifar10(args)
-    elif args.dataset.name == "Tiny-ImageNet":
-        _, test_loader = tiny_imagenet(args)
-    elif args.dataset.name == "Imagenette":
-        _, test_loader = imagenette(args)
-    else:
-        raise NotImplementedError
+    _, test_loader = read_dataset(args)(args)
 
     nbimgs = test_loader.dataset.data.shape[0]
     data = test_loader.dataset.data.reshape(

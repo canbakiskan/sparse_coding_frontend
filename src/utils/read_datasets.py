@@ -402,3 +402,17 @@ def read_dataset(args):
         raise NotImplementedError
 
     return train_loader, test_loader
+
+
+def read_test_dataset_from_file(args):
+
+    if args.dataset.name == "CIFAR10":
+        test_loader = cifar10_from_file(args)
+    elif args.dataset.name == "Tiny-ImageNet":
+        test_loader = tiny_imagenet_from_file(args)
+    elif args.dataset.name == "Imagenette":
+        test_loader = imagenette_from_file(args)
+    else:
+        raise NotImplementedError
+
+    return test_loader

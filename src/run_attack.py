@@ -23,14 +23,7 @@ from deepillusion.torchattacks import (
     PGD_EOT_sign,
     PGD_smooth,
 )
-from .utils.read_datasets import(
-    cifar10,
-    cifar10_from_file,
-    tiny_imagenet,
-    tiny_imagenet_from_file,
-    imagenette,
-    imagenette_from_file
-)
+from .utils.read_datasets import read_dataset, read_test_dataset_from_file
 from deepillusion.torchdefenses import adversarial_test
 
 import logging
@@ -147,14 +140,7 @@ def main():
         p.requires_grad = False
 
     # this is just for the adversarial test below
-    if args.dataset.name == "CIFAR10":
-        _, test_loader = cifar10(args)
-    elif args.dataset.name == "Tiny-ImageNet":
-        _, test_loader = tiny_imagenet(args)
-    elif args.dataset.name == "Imagenette":
-        _, test_loader = imagenette(args)
-    else:
-        raise NotImplementedError
+    _, test_loader = read_dataset(args)
 
     if not args.adv_testing.skip_clean:
         test_loss, test_acc = adversarial_test(model, test_loader)
@@ -213,23 +199,9 @@ def main():
         len(test_loader.dataset.targets), args.dataset.nb_classes)
 
     if read_from_file:
-        if args.dataset.name == "CIFAR10":
-            test_loader = cifar10_from_file(args)
-        elif args.dataset.name == "Tiny-ImageNet":
-            test_loader = tiny_imagenet_from_file(args)
-        elif args.dataset.name == "Imagenette":
-            test_loader = imagenette_from_file(args)
-        else:
-            raise NotImplementedError
+        test_loader = read_test_dataset_from_file(args)
     else:
-        if args.dataset.name == "CIFAR10":
-            _, test_loader = cifar10(args)
-        elif args.dataset.name == "Tiny-ImageNet":
-            _, test_loader = tiny_imagenet(args)
-        elif args.dataset.name == "Imagenette":
-            _, test_loader = imagenette(args)
-        else:
-            raise NotImplementedError
+        _, test_loader = read_dataset(args)
 
     loaders = test_loader
 
@@ -310,14 +282,7 @@ def main():
     end = time.time()
     logger.info(f"Attack computation time: {(end-start):.2f} seconds")
 
-    if args.dataset.name == "CIFAR10":
-        _, test_loader = cifar10(args)
-    elif args.dataset.name == "Tiny-ImageNet":
-        _, test_loader = tiny_imagenet(args)
-    elif args.dataset.name == "Imagenette":
-        _, test_loader = imagenette(args)
-    else:
-        raise NotImplementedError
+    _, test_loader = read_dataset(args)
 
     target = torch.tensor(test_loader.dataset.targets)[
         : args.adv_testing.nb_imgs]
