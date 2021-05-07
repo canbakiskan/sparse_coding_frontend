@@ -856,7 +856,7 @@ if __name__ == "__main__":
 
     args = get_arguments()
     args.adv_testing.box_type = "black"
-    args.adv_testing.attack_method = "zoo"
+    args.adv_testing.method = "zoo"
 
     recompute = True
     if path.exists(attack_file_namer(args)):

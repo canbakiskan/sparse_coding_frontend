@@ -124,7 +124,7 @@ def classifier_params_string(args):
 def attack_params_string(args):
     attack_params_string = ""
     if args.adv_testing.box_type == "black":
-        attack_params_string += f"_{args.adv_testing.attack_method}"
+        attack_params_string += f"_{args.adv_testing.method}"
 
         if args.adv_testing.zoo_use_tanh:
             attack_params_string += f"_tanh"

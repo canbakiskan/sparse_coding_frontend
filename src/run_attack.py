@@ -50,12 +50,12 @@ def generate_attack(args, model, data, target, adversarial_args):
         return perturbation
 
     elif args.adv_testing.box_type == "black":
-        if args.adv_testing.attack_method == "transfer":
+        if args.adv_testing.method == "transfer":
             # it shouldn't enter this clause
             raise Exception(
                 "Something went wrong, transfer attack shouldn't be using generate_attack")
 
-        elif args.adv_testing.attack_method == "boundary":
+        elif args.adv_testing.method == "boundary":
             import foolbox as fb
 
             fmodel = fb.PyTorchModel(model, bounds=(0, 1))
@@ -68,7 +68,7 @@ def generate_attack(args, model, data, target, adversarial_args):
                 starting_points=adversarial_args["attack_args"]["starting_points"])
             return raw_advs[0] - data
 
-        elif args.adv_testing.attack_method == "hopskip":
+        elif args.adv_testing.method == "hopskip":
             import foolbox as fb
 
             fmodel = fb.PyTorchModel(model, bounds=(0, 1))
@@ -81,7 +81,7 @@ def generate_attack(args, model, data, target, adversarial_args):
                 starting_points=adversarial_args["attack_args"]["starting_points"])
             return raw_advs[0] - data
 
-        elif args.adv_testing.attack_method == "zoo":
+        elif args.adv_testing.method == "zoo":
             print("For ZOO attack please run zoo_attack.py file.")
             exit()
 
@@ -116,6 +116,10 @@ def construct_adv_args(args, model):
         PGD_EOT_sign=PGD_EOT_sign,
         FGSM=FGSM,
         RFGSM=RFGSM,
+        boundary='boundary',
+        transfer='transfer',
+        hopskip='hopskip',
+        zoo='zoo'
     )
 
     attack_params = {
