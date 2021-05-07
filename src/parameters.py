@@ -329,7 +329,7 @@ def get_arguments():
         from numpy import product
         config.dictionary.nb_atoms = product(config.defense.patch_shape)
 
-    if args.adv_testing.method in [
+    if config.adv_testing.method in [
         "PGD_EOT",
         "PGD_smooth",
         "FGSM",
@@ -342,8 +342,8 @@ def get_arguments():
         "CWlinf_EOT_normalized",
         "CWlinf",
     ]:
-        args.adv_testing.box_type = "white"
+        config.adv_testing.box_type = "white"
     else:
-        args.adv_testing.box_type = "black"
+        config.adv_testing.box_type = "black"
 
     return config
