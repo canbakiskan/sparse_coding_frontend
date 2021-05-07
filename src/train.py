@@ -114,9 +114,8 @@ def save_frontend(args, frontend):
 
 
 def save_classifier(args, classifier):
-    if not os.path.exists(os.path.join(args.directory, 'checkpoints', 'classifiers')):
-        os.makedirs(os.path.join(args.directory,
-                                 'checkpoints', 'classifiers'))
+    if not os.path.exists(os.path.dirname(classifier_ckpt_namer(args))):
+        os.makedirs(os.path.dirname(classifier_ckpt_namer(args)))
 
     classifier_filepath = classifier_ckpt_namer(args)
     torch.save(classifier.state_dict(), classifier_filepath)
@@ -219,7 +218,10 @@ def main():
             f"Test  \t loss: {test_loss:.4f} \t acc: {test_acc:.4f}")
 
     if args.neural_net.save_checkpoint:
-        save_model(args, frontend, classifier)
+        if args.neural_net.no_frontend:
+            save_classifier(args, classifier)
+        else:
+            save_model(args, frontend, classifier)
 
 
 if __name__ == "__main__":
