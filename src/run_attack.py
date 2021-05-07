@@ -7,8 +7,8 @@ from .utils.namers import (
     attack_file_namer,
 )
 from .utils.get_modules import (
-    get_classifier,
-    get_frontend,
+    load_classifier,
+    load_frontend,
 )
 
 import numpy as np
@@ -24,11 +24,16 @@ from deepillusion.torchattacks import (
     PGD_smooth,
 )
 from .utils.read_datasets import read_dataset, read_test_dataset_from_file
+from .utils.logger import logger_setup
+from .utils.device import determine_device
 from deepillusion.torchdefenses import adversarial_test
 
 import logging
 import sys
 import time
+
+from .parameters import get_arguments
+
 logger = logging.getLogger(__name__)
 
 
@@ -76,75 +81,32 @@ def generate_attack(args, model, data, target, adversarial_args):
                 starting_points=adversarial_args["attack_args"]["starting_points"])
             return raw_advs[0] - data
 
+        elif args.adv_testing.otherbox_method == "zoo":
+            print("For ZOO attack please run zoo_attack.py file.")
+            exit()
+
         else:
-            raise ValueError("Otherbox attack type not supported.")
+            raise ValueError("Blackbox attack type not supported.")
 
     else:
         raise ValueError("Attack box type not supported.")
 
 
-def main():
-
-    from .parameters import get_arguments
-
-    args = get_arguments()
-
-    recompute = True
-
-    if path.exists(attack_file_namer(args)):
-        print(
-            "Attack already exists. Do you want to recompute? [y/(n)]", end=" ")
-        response = input()
-        sys.stdout.write("\033[F")
-        sys.stdout.write("\033[K")
-        if response != "y":
-            recompute = False
-
-    if not os.path.exists(os.path.dirname(attack_log_namer(args))):
-        os.makedirs(os.path.dirname(attack_log_namer(args)))
-
-    logging.basicConfig(
-        format="[%(asctime)s] - %(message)s",
-        datefmt="%Y/%m/%d %H:%M:%S",
-        level=logging.INFO,
-        handlers=[
-            logging.FileHandler(attack_log_namer(args)),
-            logging.StreamHandler(sys.stdout),
-        ],
-    )
-    logger.info(args)
-    logger.info("\n")
-
-    use_cuda = args.use_gpu and torch.cuda.is_available()
-    device = torch.device("cuda" if use_cuda else "cpu")
-
-    read_from_file = args.adv_testing.method == "transfer" or not recompute
-
-    if read_from_file:
-        args.adv_testing.save = False
-
-    classifier = get_classifier(args)
-
-    if args.neural_net.no_frontend:
-        model = classifier
-
+def check_recompute():
+    print(
+        "Attack already exists. Do you want to recompute? [y/(n)]", end=" ")
+    response = input()
+    sys.stdout.write("\033[F")
+    sys.stdout.write("\033[K")
+    if response != "y":
+        recompute = False
     else:
-        frontend = get_frontend(args)
+        recompute = True
 
-        model = Combined(frontend, classifier)
+    return recompute
 
-    model = model.to(device)
-    model.eval()
 
-    for p in model.parameters():
-        p.requires_grad = False
-
-    # this is just for the adversarial test below
-    _, test_loader = read_dataset(args)
-
-    if not args.adv_testing.skip_clean:
-        test_loss, test_acc = adversarial_test(model, test_loader)
-        logger.info(f"Clean \t loss: {test_loss:.4f} \t acc: {test_acc:.4f}")
+def construct_adv_args(args, model):
 
     attacks = dict(
         PGD=PGD,
@@ -188,13 +150,101 @@ def main():
         ),
     )
 
+    return adversarial_args
+
+
+def get_closest_different_label_images(args, model, test_loader):
+
+    device = determine_device(args)
+
+    img_distances_idx = np.load(os.path.join(
+        args.directory, 'data', 'image_distances', args.dataset.name, 'closest_img_indices.npy'))
+    preds = torch.zeros(10000, dtype=torch.int)
+
+    for batch_idx, items in enumerate(test_loader):
+
+        data, target = items
+        data = data.to(device)
+        target = target.to(device)
+        preds[batch_idx
+              * args.neural_net.test_batch_size: (batch_idx + 1)
+              * args.neural_net.test_batch_size] = model(data).argmax(dim=1).detach().cpu()
+
+    closest_adv_idx = torch.zeros(10000, dtype=int)
+    for i in range(10000):
+        j = 1
+        while preds[img_distances_idx[i, j]] == test_loader.dataset.targets[i]:
+            j += 1
+        closest_adv_idx[i] = img_distances_idx[i, j]
+
+    closest_images = torch.tensor(
+        test_loader.dataset.data[closest_adv_idx]/255, dtype=torch.float32).permute(0, 3, 1, 2)
+
+    return closest_images
+
+
+def save_attack(args, attacked_images):
+
+    attack_filepath = attack_file_namer(args)
+
+    if not os.path.exists(os.path.dirname(attack_file_namer(args))):
+        os.makedirs(os.path.dirname(attack_file_namer(args)))
+
+    np.save(attack_filepath, attacked_images.detach().cpu().numpy())
+
+    logger.info(f"Saved to {attack_filepath}")
+
+
+def main():
+
+    args = get_arguments()
+
+    logger_setup(attack_log_namer(args))
+    logger.info(args)
+    logger.info("\n")
+
+    if path.exists(attack_file_namer(args)):
+        compute = check_recompute()
+    else:
+        compute = True
+
+    read_from_file = args.adv_testing.method == "transfer" or not compute
+
+    if read_from_file:
+        args.adv_testing.save = False
+
+    device = determine_device(args)
+
+    classifier = load_classifier(args)
+
+    if args.neural_net.no_frontend:
+        model = classifier
+
+    else:
+        frontend = load_frontend(args)
+
+        model = Combined(frontend, classifier)
+
+    model = model.to(device)
+    model.eval()
+
+    for p in model.parameters():
+        p.requires_grad = False
+
+    if not args.adv_testing.skip_clean:
+        _, test_loader = read_dataset(args)
+        test_loss, test_acc = adversarial_test(model, test_loader)
+        logger.info(f"Clean \t loss: {test_loss:.4f} \t acc: {test_acc:.4f}")
+
+    # setup for the attack
+    adversarial_args = construct_adv_args(args, model)
+
+    correct_sofar = 0
     test_loss = 0
-    correct = 0
 
     if args.adv_testing.save:
         attacked_images = torch.zeros(len(
             test_loader.dataset.targets), args.dataset.img_shape[2], args.dataset.img_shape[0], args.dataset.img_shape[1])
-
     attack_output = torch.zeros(
         len(test_loader.dataset.targets), args.dataset.nb_classes)
 
@@ -203,37 +253,14 @@ def main():
     else:
         _, test_loader = read_dataset(args)
 
-    loaders = test_loader
+    if (args.adv_testing.method == "boundary" or args.adv_testing.method == "hopskip") and not read_from_file:
+        closest_images = get_closest_different_label_images(
+            args, model, test_loader)
 
     start = time.time()
 
-    if (args.adv_testing.method == "boundary" or args.adv_testing.method == "hopskip") and not read_from_file:
-        img_distances_idx = np.load(os.path.join(
-            args.directory, 'data', 'image_distances', args.dataset.name, 'closest_img_indices.npy'))
-        preds = torch.zeros(10000, dtype=torch.int)
-
-        for batch_idx, items in enumerate(loaders):
-
-            data, target = items
-            data = data.to(device)
-            target = target.to(device)
-            preds[batch_idx
-                  * args.neural_net.test_batch_size: (batch_idx + 1)
-                  * args.neural_net.test_batch_size] = model(data).argmax(dim=1).detach().cpu()
-
-        closest_adv_idx = torch.zeros(10000, dtype=int)
-        for i in range(10000):
-            j = 1
-            while preds[img_distances_idx[i, j]] == test_loader.dataset.targets[i]:
-                j += 1
-            closest_adv_idx[i] = img_distances_idx[i, j]
-
-        closest_images = torch.tensor(
-            test_loader.dataset.data[closest_adv_idx]/255, dtype=torch.float32).permute(0, 3, 1, 2)
-
-    correct_sofar = 0
     for batch_idx, items in enumerate(
-        pbar := tqdm(loaders, desc="Attack progress", leave=False)
+        pbar := tqdm(test_loader, desc="Attack progress", leave=False)
     ):
         if args.adv_testing.nb_imgs > 0 and args.adv_testing.nb_imgs < (batch_idx + 1) * args.neural_net.test_batch_size:
             break
@@ -295,14 +322,7 @@ def main():
     logger.info(f"Attack accuracy: {(100*accuracy_attack):.2f}%")
 
     if args.adv_testing.save:
-        attack_filepath = attack_file_namer(args)
-
-        if not os.path.exists(os.path.dirname(attack_file_namer(args))):
-            os.makedirs(os.path.dirname(attack_file_namer(args)))
-
-        np.save(attack_filepath, attacked_images.detach().cpu().numpy())
-
-        logger.info(f"Saved to {attack_filepath}")
+        save_attack(args, attacked_images)
 
 
 if __name__ == "__main__":

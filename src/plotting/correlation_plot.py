@@ -4,7 +4,7 @@ import torch
 from ..models.resnet import ResNetWide
 from ..utils.read_datasets import cifar10
 from ..utils.plot_settings import *
-from ..utils.get_modules import get_frontend
+from ..utils.get_modules import load_frontend
 import numpy as np
 from ..parameters import get_arguments
 
@@ -23,7 +23,7 @@ classifier.load_state_dict(
 classifier.to(device)
 
 train_loader, test_loader = cifar10(args)
-frontend = get_frontend(args)
+frontend = load_frontend(args)
 
 plt.figure(figsize=(10, 10))
 weights = classifier.conv1.weight.clone().reshape(160, -1)

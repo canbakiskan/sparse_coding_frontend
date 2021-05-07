@@ -8,8 +8,8 @@ from numba import jit
 import math
 import time
 from .utils.get_modules import (
-    get_classifier,
-    get_frontend,
+    load_classifier,
+    load_frontend,
 )
 from .models.combined import Combined
 from .utils.read_datasets import(
@@ -883,13 +883,13 @@ if __name__ == "__main__":
     use_cuda = args.use_gpu and torch.cuda.is_available()
     device = torch.device("cuda" if use_cuda else "cpu")
 
-    classifier = get_classifier(args)
+    classifier = load_classifier(args)
 
     if args.neural_net.no_frontend:
         model = classifier
 
     else:
-        frontend = get_frontend(args)
+        frontend = load_frontend(args)
 
         model = Combined(frontend, classifier)
 

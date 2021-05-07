@@ -9,7 +9,7 @@ from .namers import (
 from ..models.frontend import frontend_class
 
 
-def get_classifier(args):
+def create_classifier(args):
 
     use_cuda = args.use_gpu and torch.cuda.is_available()
     device = torch.device("cuda" if use_cuda else "cpu")
@@ -44,8 +44,22 @@ def get_classifier(args):
     else:
         raise NotImplementedError
 
-    param_dict = torch.load(classifier_ckpt_namer(args),
-                            map_location=torch.device(device),)
+    return classifier
+
+
+def load_classifier(args):
+
+    use_cuda = args.use_gpu and torch.cuda.is_available()
+    device = torch.device("cuda" if use_cuda else "cpu")
+
+    classifier = create_classifier(args)
+
+    try:
+        param_dict = torch.load(classifier_ckpt_namer(args),
+                                map_location=torch.device(device),)
+    except:
+        raise FileNotFoundError(classifier_ckpt_namer(args))
+
     if "module" in list(param_dict.keys())[0]:
         for _ in range(len(param_dict)):
             key, val = param_dict.popitem(False)
@@ -58,12 +72,22 @@ def get_classifier(args):
     return classifier
 
 
-def get_frontend(args):
+def create_frontend(args):
 
     use_cuda = args.use_gpu and torch.cuda.is_available()
     device = torch.device("cuda" if use_cuda else "cpu")
 
     frontend = frontend_class(args).to(device)
+
+    return frontend
+
+
+def load_frontend(args):
+
+    use_cuda = args.use_gpu and torch.cuda.is_available()
+    device = torch.device("cuda" if use_cuda else "cpu")
+
+    frontend = create_frontend(args)
 
     try:
         frontend_checkpoint = torch.load(
@@ -73,14 +97,9 @@ def get_frontend(args):
     except:
         raise FileNotFoundError(frontend_ckpt_namer(args))
 
-    try:
-        frontend.load_state_dict(frontend_checkpoint)
-    except:
-        raise KeyError
+    frontend.load_state_dict(frontend_checkpoint)
 
     print(f"Frontend: {frontend_ckpt_namer(args)}")
-
-    return frontend
 
 
 def get_dictionary(args):

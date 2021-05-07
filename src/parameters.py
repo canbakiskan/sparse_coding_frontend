@@ -10,6 +10,68 @@ from types import SimpleNamespace
 from .utils.powerset import powerset
 
 
+def make_config_obj(args):
+
+    config = toml.load(path.join(args.directory, "src", "config.toml"))
+    config = json.loads(json.dumps(config),
+                        object_hook=lambda d: SimpleNamespace(**d))
+
+    config.directory = args.directory
+
+    for arg, val in args.__dict__.items():
+        if "neural_net" in arg:
+            arg = arg.replace("neural_net_", "")
+            if arg == "lr_scheduler" or arg == "lr":
+                field = config.neural_net.optimizer
+            elif arg == "lr_max":
+                field = config.neural_net.optimizer.cyclic
+            else:
+                field = config.neural_net
+            setattr(field, arg, val)
+        if "adv_training" in arg:
+            setattr(config.adv_training, arg.replace("adv_training_", ""), val)
+        if "attack_" in arg:
+            setattr(config.adv_testing, arg.replace("attack_", ""), val)
+        if "defense_" in arg:
+            setattr(config.defense, arg.replace("defense_", ""), val)
+        if "ablation_" in arg:
+            setattr(config.ablation, arg.replace("ablation_", ""), val)
+
+    if config.adv_testing.norm != 'inf':
+        config.adv_testing.norm = int(config.adv_testing.norm)
+    if config.adv_training.norm != 'inf':
+        config.adv_training.norm = int(config.adv_training.norm)
+
+    config.defense.patch_shape = (
+        config.defense.patch_size, config.defense.patch_size, 3)
+
+    if config.neural_net.optimizer.lr_scheduler == "cyc" and config.neural_net.optimizer.name != "sgd":
+        raise AssertionError("Cyclic learning rate can only be used with SGD.")
+
+    if config.dictionary.type == "dct":
+        from numpy import product
+        config.dictionary.nb_atoms = product(config.defense.patch_shape)
+
+    if config.adv_testing.method in [
+        "PGD_EOT",
+        "PGD_smooth",
+        "FGSM",
+        "RFGSM",
+        "PGD",
+        "PGD_EOT",
+        "PGD_EOT_normalized",
+        "PGD_EOT_sign",
+        "CWlinf_EOT",
+        "CWlinf_EOT_normalized",
+        "CWlinf",
+    ]:
+        config.adv_testing.box_type = "white"
+    else:
+        config.adv_testing.box_type = "black"
+
+    return config
+
+
 def get_arguments():
     """ Hyperparameters and other configuration items"""
 
@@ -282,61 +344,6 @@ def get_arguments():
 
     args = parser.parse_args()
 
-    config = toml.load(path.join(args.directory, "src", "config.toml"))
-    config = json.loads(json.dumps(config),
-                        object_hook=lambda d: SimpleNamespace(**d))
-
-    config.directory = args.directory
-
-    for arg, val in args.__dict__.items():
-        if "neural_net" in arg:
-            arg = arg.replace("neural_net_", "")
-            if arg == "lr_scheduler" or arg == "lr":
-                field = config.neural_net.optimizer
-            elif arg == "lr_max":
-                field = config.neural_net.optimizer.cyclic
-            else:
-                field = config.neural_net
-            setattr(field, arg, val)
-        if "adv_training" in arg:
-            setattr(config.adv_training, arg.replace("adv_training_", ""), val)
-        if "attack_" in arg:
-            setattr(config.adv_testing, arg.replace("attack_", ""), val)
-        if "defense_" in arg:
-            setattr(config.defense, arg.replace("defense_", ""), val)
-        if "ablation_" in arg:
-            setattr(config.ablation, arg.replace("ablation_", ""), val)
-
-    if config.adv_testing.norm != 'inf':
-        config.adv_testing.norm = int(config.adv_testing.norm)
-    if config.adv_training.norm != 'inf':
-        config.adv_training.norm = int(config.adv_training.norm)
-
-    config.defense.patch_shape = (
-        config.defense.patch_size, config.defense.patch_size, 3)
-
-    if config.neural_net.optimizer.lr_scheduler == "cyc" and config.neural_net.optimizer.name != "sgd":
-        raise AssertionError("Cyclic learning rate can only be used with SGD.")
-
-    if config.dictionary.type == "dct":
-        from numpy import product
-        config.dictionary.nb_atoms = product(config.defense.patch_shape)
-
-    if config.adv_testing.method in [
-        "PGD_EOT",
-        "PGD_smooth",
-        "FGSM",
-        "RFGSM",
-        "PGD",
-        "PGD_EOT",
-        "PGD_EOT_normalized",
-        "PGD_EOT_sign",
-        "CWlinf_EOT",
-        "CWlinf_EOT_normalized",
-        "CWlinf",
-    ]:
-        config.adv_testing.box_type = "white"
-    else:
-        config.adv_testing.box_type = "black"
+    config = make_config_obj(args)
 
     return config
