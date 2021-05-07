@@ -855,8 +855,8 @@ def generate_data(data, samples, targeted=True, start=0, inception=False):
 if __name__ == "__main__":
 
     args = get_arguments()
-    args.adv_testing.box_type = "other"
-    args.adv_testing.otherbox_method = "zoo"
+    args.adv_testing.box_type = "black"
+    args.adv_testing.attack_method = "zoo"
 
     recompute = True
     if path.exists(attack_file_namer(args)):
