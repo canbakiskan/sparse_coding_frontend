@@ -79,41 +79,6 @@ def tiny_imagenet_from_file(args):
     return attack_loader
 
 
-def tiny_imagenet_initialization_from_file(args):
-    use_cuda = args.use_gpu and torch.cuda.is_available()
-    kwargs = {"num_workers": 1, "pin_memory": True} if use_cuda else {}
-
-    # Read
-    filepath = (
-        args.directory
-        + "data/attacked_datasets/"
-        + args.dataset.name
-        + "/"
-        + args.attack_initialization_file
-    )
-
-    test_images = np.load(filepath)
-
-    data_dir = args.directory + "data/"
-    test_dir = path.join(data_dir, "original_datasets",
-                         "tiny-imagenet-200", "val")
-    transform_test = transforms.Compose([transforms.ToTensor()])
-    testset = datasets.ImageFolder(test_dir, transform=transform_test)
-    test_loader = torch.utils.data.DataLoader(
-        testset, batch_size=args.neural_net.test_batch_size, shuffle=False, num_workers=2
-    )
-
-    tensor_x = torch.Tensor(test_images / np.max(test_images))
-    tensor_y = torch.Tensor(test_loader.dataset.targets).long()
-
-    tensor_data = torch.utils.data.TensorDataset(tensor_x, tensor_y)
-    attack_loader = torch.utils.data.DataLoader(
-        tensor_data, batch_size=args.neural_net.test_batch_size, shuffle=False, **kwargs
-    )
-
-    return attack_loader
-
-
 def imagenette(args):
 
     data_dir = args.directory + "data/"
@@ -166,41 +131,6 @@ def imagenette_from_file(args):
 
     else:
         filepath = attack_file_namer(args)
-
-    test_images = np.load(filepath)
-
-    data_dir = args.directory + "data/"
-    test_dir = path.join(data_dir, "original_datasets",
-                         "imagenette2-160", "val")
-    transform_test = transforms.Compose([transforms.ToTensor()])
-    testset = datasets.ImageFolder(test_dir, transform=transform_test)
-    test_loader = torch.utils.data.DataLoader(
-        testset, batch_size=args.neural_net.test_batch_size, shuffle=False, num_workers=2
-    )
-
-    tensor_x = torch.Tensor(test_images / np.max(test_images))
-    tensor_y = torch.Tensor(test_loader.dataset.targets).long()
-
-    tensor_data = torch.utils.data.TensorDataset(tensor_x, tensor_y)
-    attack_loader = torch.utils.data.DataLoader(
-        tensor_data, batch_size=args.neural_net.test_batch_size, shuffle=False, **kwargs
-    )
-
-    return attack_loader
-
-
-def imagenette_initialization_from_file(args):
-    use_cuda = args.use_gpu and torch.cuda.is_available()
-    kwargs = {"num_workers": 1, "pin_memory": True} if use_cuda else {}
-
-    # Read
-    filepath = (
-        args.directory
-        + "data/attacked_datasets/"
-        + args.dataset.name
-        + "/"
-        + args.attack_initialization_file
-    )
 
     test_images = np.load(filepath)
 
@@ -279,41 +209,6 @@ def cifar10_from_file(args):
 
     else:
         filepath = attack_file_namer(args)
-
-    test_images = np.load(filepath)
-
-    cifar10 = datasets.CIFAR10(
-        path.join(args.directory, "data/original_datasets"),
-        train=False,
-        transform=None,
-        target_transform=None,
-        download=False,
-    )
-
-    tensor_x = torch.Tensor(test_images / np.max(test_images))
-    tensor_y = torch.Tensor(cifar10.targets).long()
-
-    tensor_data = torch.utils.data.TensorDataset(tensor_x, tensor_y)
-    attack_loader = torch.utils.data.DataLoader(
-        tensor_data, batch_size=args.neural_net.test_batch_size, shuffle=False, **kwargs
-    )
-
-    return attack_loader
-
-
-def cifar10_initialization_from_file(args):
-
-    use_cuda = args.use_gpu and torch.cuda.is_available()
-    kwargs = {"num_workers": 1, "pin_memory": True} if use_cuda else {}
-
-    # Read
-    filepath = (
-        args.directory
-        + "data/attacked_datasets/"
-        + args.dataset.name
-        + "/"
-        + args.attack_initialization_file
-    )
 
     test_images = np.load(filepath)
 
