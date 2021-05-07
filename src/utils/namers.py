@@ -1,4 +1,4 @@
-import os
+from os.path import join
 import numpy as np
 
 
@@ -161,86 +161,69 @@ def attack_params_string(args):
 
 def dict_file_namer(args):
 
-    data_dir = args.directory + "data/"
-
-    dict_filepath = os.path.join(
-        data_dir, "dictionaries", args.dataset.name, dict_params_string(
-            args) + ".npz"
+    dict_filepath = join(
+        args.directory, 'data', 'dictionaries',
+        args.dataset.name, dict_params_string(args) + '.npz'
     )
+
     return dict_filepath
 
 
 def frontend_ckpt_namer(args):
 
-    file_path = args.directory + \
-        f"checkpoints/frontends/{args.dataset.name}/"
+    file_path = join(args.directory, 'checkpoints',
+                     'frontends', args.dataset.name)
 
-    file_path += frontend_params_string(args)
+    file_path = join(file_path, frontend_params_string(args) + '.pt')
 
-    file_path += ".pt"
     return file_path
 
 
 def frontend_log_namer(args):
 
-    file_path = args.directory + f"logs/{args.dataset.name}/"
+    file_path = join(args.directory, 'logs', args.dataset.name)
 
-    file_path += frontend_params_string(args)
-
-    file_path += ".log"
+    file_path = join(file_path, frontend_params_string(args) + '.log')
 
     return file_path
 
 
 def classifier_ckpt_namer(args):
 
-    file_path = args.directory + \
-        f"checkpoints/classifiers/{args.dataset.name}/"
+    file_path = join(args.directory, 'checkpoints',
+                     'classifiers', args.dataset.name)
 
-    file_path += classifier_params_string(args)
-
-    file_path += ".pt"
+    file_path = join(file_path, classifier_params_string(args) + '.pt')
 
     return file_path
 
 
 def classifier_log_namer(args):
 
-    file_path = args.directory + f"logs/{args.dataset.name}/"
+    file_path = join(args.directory, 'logs', args.dataset.name)
 
-    file_path += classifier_params_string(args)
-
-    file_path += ".log"
+    file_path = join(file_path, classifier_params_string(args) + '.log')
 
     return file_path
 
 
 def attack_file_namer(args):
 
-    file_path = args.directory + f"data/attacked_datasets/{args.dataset.name}/"
+    file_path = join(args.directory, 'data',
+                     'attacked_datasets', args.dataset.name)
 
-    file_path += attack_params_string(args)
-    file_path += "_"
-    if args.ablation.distill:
-        file_path += "distill_"
-    file_path += classifier_params_string(args)
-
-    file_path += ".npy"
+    file_path = join(file_path, attack_params_string(args) +
+                     '_' + classifier_params_string(args) + '.npy')
 
     return file_path
 
 
 def attack_log_namer(args):
 
-    file_path = args.directory + f"logs/{args.dataset.name}/"
+    file_path = join(args.directory, 'logs', args.dataset.name)
 
-    file_path += attack_params_string(args)
-    file_path += "_"
-    if args.ablation.distill:
-        file_path += "distill_"
-    file_path += classifier_params_string(args)
-
-    file_path += ".log"
+    file_path = join(file_path, attack_params_string(
+        args) + '_' + classifier_params_string(args) + '.log')
 
     return file_path
 

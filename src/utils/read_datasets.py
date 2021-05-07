@@ -2,20 +2,17 @@ import torch
 from torchvision import datasets, transforms
 
 import numpy as np
-from os import path
+from os.path import join
 from .namers import attack_file_namer
 
 
 def tiny_imagenet(args):
 
-    data_dir = args.directory + "data/"
-    train_dir = path.join(data_dir, "original_datasets",
-                          "tiny-imagenet-200", "train")
-    test_dir = path.join(data_dir, "original_datasets",
-                         "tiny-imagenet-200", "val")
-
-    use_cuda = args.use_gpu and torch.cuda.is_available()
-    kwargs = {"num_workers": 4, "pin_memory": True} if use_cuda else {}
+    data_dir = join(args.directory, 'data')
+    train_dir = join(data_dir, "original_datasets",
+                     "tiny-imagenet-200", "train")
+    test_dir = join(data_dir, "original_datasets",
+                    "tiny-imagenet-200", "val")
 
     transform_train = transforms.Compose(
         [
@@ -46,12 +43,9 @@ def tiny_imagenet_from_file(args):
 
     # Read
     if args.adv_testing.method == "transfer":
-        filepath = (
-            args.directory
-            + "data/attacked_datasets/"
-            + args.dataset.name
-            + "/"
-            + args.adv_testing.transfer_file
+        filepath = join(
+            args.directory, 'data',
+            'attacked_datasets', args.dataset.name, args.adv_testing.transfer_file
         )
 
     else:
@@ -59,9 +53,9 @@ def tiny_imagenet_from_file(args):
 
     test_images = np.load(filepath)
 
-    data_dir = args.directory + "data/"
-    test_dir = path.join(data_dir, "original_datasets",
-                         "tiny-imagenet-200", "val")
+    data_dir = join(args.directory, 'data')
+    test_dir = join(data_dir, "original_datasets",
+                    "tiny-imagenet-200", "val")
     transform_test = transforms.Compose([transforms.ToTensor()])
     testset = datasets.ImageFolder(test_dir, transform=transform_test)
     test_loader = torch.utils.data.DataLoader(
@@ -81,11 +75,11 @@ def tiny_imagenet_from_file(args):
 
 def imagenette(args):
 
-    data_dir = args.directory + "data/"
-    train_dir = path.join(data_dir, "original_datasets",
-                          "imagenette2-160", "train")
-    test_dir = path.join(data_dir, "original_datasets",
-                         "imagenette2-160", "val")
+    data_dir = join(args.directory, 'data')
+    train_dir = join(data_dir, "original_datasets",
+                     "imagenette2-160", "train")
+    test_dir = join(data_dir, "original_datasets",
+                    "imagenette2-160", "val")
 
     use_cuda = args.use_gpu and torch.cuda.is_available()
     kwargs = {"num_workers": 4, "pin_memory": True} if use_cuda else {}
@@ -121,12 +115,8 @@ def imagenette_from_file(args):
 
     # Read
     if args.adv_testing.method == "transfer":
-        filepath = (
-            args.directory
-            + "data/attacked_datasets/"
-            + args.dataset.name
-            + "/"
-            + args.adv_testing.transfer_file
+        filepath = join(
+            args.directory, 'data', 'attacked_datasets', args.dataset.name, args.adv_testing.transfer_file
         )
 
     else:
@@ -134,9 +124,9 @@ def imagenette_from_file(args):
 
     test_images = np.load(filepath)
 
-    data_dir = args.directory + "data/"
-    test_dir = path.join(data_dir, "original_datasets",
-                         "imagenette2-160", "val")
+    data_dir = join(args.directory, 'data')
+    test_dir = join(data_dir, "original_datasets",
+                    "imagenette2-160", "val")
     transform_test = transforms.Compose([transforms.ToTensor()])
     testset = datasets.ImageFolder(test_dir, transform=transform_test)
     test_loader = torch.utils.data.DataLoader(
@@ -170,7 +160,7 @@ def cifar10(args):
     transform_test = transforms.Compose([transforms.ToTensor()])
 
     trainset = datasets.CIFAR10(
-        root=args.directory + "data/original_datasets",
+        root=join(args.directory, 'data', 'original_datasets'),
         train=True,
         download=True,
         transform=transform_train,
@@ -180,7 +170,7 @@ def cifar10(args):
     )
 
     testset = datasets.CIFAR10(
-        root=args.directory + "data/original_datasets",
+        root=join(args.directory, 'data', 'original_datasets'),
         train=False,
         download=True,
         transform=transform_test,
@@ -199,12 +189,8 @@ def cifar10_from_file(args):
 
     # Read
     if args.adv_testing.method == "transfer":
-        filepath = (
-            args.directory
-            + "data/attacked_datasets/"
-            + args.dataset.name
-            + "/"
-            + args.adv_testing.transfer_file
+        filepath = join(
+            args.directory, 'data', 'attacked_datasets', args.dataset.name, args.adv_testing.transfer_file
         )
 
     else:
@@ -213,7 +199,7 @@ def cifar10_from_file(args):
     test_images = np.load(filepath)
 
     cifar10 = datasets.CIFAR10(
-        path.join(args.directory, "data/original_datasets"),
+        join(args.directory, 'data', 'original_datasets'),
         train=False,
         transform=None,
         target_transform=None,
@@ -233,9 +219,9 @@ def cifar10_from_file(args):
 
 def imagenet(args):
 
-    data_dir = args.directory + "data/"
-    train_dir = path.join(data_dir, "original_datasets", "imagenet", "train")
-    test_dir = path.join(data_dir, "original_datasets", "imagenet", "val")
+    data_dir = join(args.directory, 'data')
+    train_dir = join(data_dir, "original_datasets", "imagenet", "train")
+    test_dir = join(data_dir, "original_datasets", "imagenet", "val")
 
     use_cuda = args.use_gpu and torch.cuda.is_available()
     kwargs = {"num_workers": 4, "pin_memory": True} if use_cuda else {}

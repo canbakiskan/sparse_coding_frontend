@@ -1,6 +1,7 @@
 from ..utils.plot_settings import *
 import matplotlib.pyplot as plt
 import numpy as np
+from os.path import join
 
 x = np.linspace(-1.1, 1.1, 2201)
 jump = 8/255*3
@@ -32,4 +33,4 @@ plt.ylabel(
     r"$\frac{\mathbf{\bar{x}}_{ij}(l)}{\left\|\mathbf{d}_{l}\right\|_{1}}$").set_rotation(0)
 plt.legend()
 plt.tight_layout()
-plt.savefig("./figs/bpda.pdf")
+plt.savefig(join('figs', 'bpda.pdf'))

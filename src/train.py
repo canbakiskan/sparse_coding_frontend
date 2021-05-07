@@ -240,8 +240,9 @@ def main():
 
     # Save model parameters
     if args.neural_net.save_checkpoint:
-        if not os.path.exists(args.directory + "checkpoints/classifiers/"):
-            os.makedirs(args.directory + "checkpoints/classifiers/")
+        if not os.path.exists(os.path.join(args.directory, 'checkpoints', 'classifiers')):
+            os.makedirs(os.path.join(args.directory,
+                                     'checkpoints', 'classifiers'))
 
         classifier_filepath = classifier_ckpt_namer(args)
         torch.save(classifier.state_dict(), classifier_filepath)

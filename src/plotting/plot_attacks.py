@@ -51,8 +51,8 @@ def main():
         plt.yticks([])
 
     plt.tight_layout()
-    plt.savefig('figs/attack_visualizations/' +
-                path.splitext(path.basename(attack_file_namer(args)))[0]+'.pdf')
+    plt.savefig(path.join('figs', 'attack_visualizations',
+                          path.splitext(path.basename(attack_file_namer(args)))[0]+'.pdf'))
 
 
 if __name__ == "__main__":

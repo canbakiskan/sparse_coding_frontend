@@ -218,11 +218,9 @@ def main():
             f"Dictionary learned from {args.dataset.name}", fontsize=16)
         plt.subplots_adjust(0.08, 0.02, 0.92, 0.85, 0.08, 0.23)
 
-        figures_dir = args.directory + "figs/"
-
         dictionary_parameters_string = dict_params_string(args)
-        plt.savefig(figures_dir + "{args.dataset}_" + "dict_" +
-                    dictionary_parameters_string + ".pdf")
+        plt.savefig(os.path.join(args.directory, 'figs', "{args.dataset}_" + "dict_" +
+                                 dictionary_parameters_string + ".pdf"))
 
 
 if __name__ == "__main__":

@@ -208,8 +208,8 @@ def main():
     start = time.time()
 
     if (args.adv_testing.method == "boundary" or args.adv_testing.method == "hopskip") and not read_from_file:
-        img_distances_idx = np.load(
-            f'./data/image_distances/{args.dataset.name}/closest_img_indices.npy')
+        img_distances_idx = np.load(os.path.join(
+            args.directory, 'data', 'image_distances', args.dataset.name, 'closest_img_indices.npy'))
         preds = torch.zeros(10000, dtype=torch.int)
 
         for batch_idx, items in enumerate(loaders):

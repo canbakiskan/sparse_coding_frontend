@@ -6,8 +6,7 @@ import os
 
 args = get_arguments()
 
-
-if not os.path.exists(args.directory + f'data/image_distances/{args.dataset.name}/closest_img_indices.npy'):
+if not os.path.exists(os.path.join(args.directory, 'data', 'image_distances', args.dataset.name, 'closest_img_indices.npy')):
 
     _, test_loader = read_dataset(args)(args)
 
@@ -27,13 +26,13 @@ if not os.path.exists(args.directory + f'data/image_distances/{args.dataset.name
 
     img_distances_idx = np.argsort(l2dist).astype(np.uint16)
 
-    if not os.path.exists(args.directory + f'data/image_distances/{args.dataset.name}'):
-        os.makedirs(args.directory +
-                    f'data/image_distances/{args.dataset.name}', exist_ok=True)
+    if not os.path.exists(os.path.join(args.directory, 'data', 'image_distances', args.dataset.name)):
+        os.makedirs(os.path.join(args.directory, 'data',
+                                 'image_distances', args.dataset.name), exist_ok=True)
 
-    np.save(
-        f'./data/image_distances/{args.dataset.name}/closest_img_indices.npy', img_distances_idx[:, :1000])
+    np.save(os.path.join(args.directory,
+                         'data', 'image_distances', args.dataset.name, 'closest_img_indices.npy'), img_distances_idx[:, :1000])
 
 else:
-    print(
-        f'./data/image_distances/{args.dataset.name}/closest_img_indices.npy already exists.')
+    print(os.path.join(args.directory,
+                       'data', 'image_distances', args.dataset.name, 'closest_img_indices.npy') + ' already exists.')

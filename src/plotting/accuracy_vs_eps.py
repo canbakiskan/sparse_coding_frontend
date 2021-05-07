@@ -1,6 +1,6 @@
 from ..utils.plot_settings import *
 import matplotlib.pyplot as plt
-
+from os.path import join
 
 plt.figure(figsize=(6, 3))
 plt.plot([0, 4, 8, 16, 24, 32, 40, 48, 56, 64, 128], [81.81,
@@ -9,4 +9,4 @@ plt.ylim([0, 90])
 plt.xlabel(r"$\epsilon \times 255$")
 plt.ylabel("Adversarial accuracy")
 plt.tight_layout()
-plt.savefig("./figs/acc_vs_eps.pdf")
+plt.savefig(join('figs', 'acc_vs_eps.pdf'))
