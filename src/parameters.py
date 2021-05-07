@@ -240,13 +240,6 @@ def get_arguments():
         help="first layer of frontend is also trained, no fixed dictionary is used",
     )
 
-    ablation.add_argument(
-        "--ablation_distill",
-        action="store_true",
-        default=False,
-        help="whether to use distilled model in run_attack",
-    )
-
     # Defense
     defense = parser.add_argument_group("defense", "Defense arguments")
 

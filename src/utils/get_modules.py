@@ -4,8 +4,7 @@ from os import path
 from .namers import (
     dict_file_namer,
     frontend_ckpt_namer,
-    classifier_ckpt_namer,
-    distillation_ckpt_namer
+    classifier_ckpt_namer
 )
 from ..models.frontend import frontend_class
 
@@ -45,12 +44,8 @@ def get_classifier(args):
     else:
         raise NotImplementedError
 
-    if args.ablation.distill:
-        param_dict = torch.load(distillation_ckpt_namer(args),
-                                map_location=torch.device(device),)
-    else:
-        param_dict = torch.load(classifier_ckpt_namer(args),
-                                map_location=torch.device(device),)
+    param_dict = torch.load(classifier_ckpt_namer(args),
+                            map_location=torch.device(device),)
     if "module" in list(param_dict.keys())[0]:
         for _ in range(len(param_dict)):
             key, val = param_dict.popitem(False)
@@ -58,10 +53,7 @@ def get_classifier(args):
 
     classifier.load_state_dict(param_dict)
 
-    if args.ablation.distill:
-        print(f"Classifier: {distillation_ckpt_namer(args)}")
-    else:
-        print(f"Classifier: {classifier_ckpt_namer(args)}")
+    print(f"Classifier: {classifier_ckpt_namer(args)}")
 
     return classifier
 

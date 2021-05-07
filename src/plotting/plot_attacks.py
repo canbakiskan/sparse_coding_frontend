@@ -32,7 +32,7 @@ def main():
 
     print(
         f"Mean L^2 norm: {np.linalg.norm(perturbation.reshape(perturbation.shape[0], -1), ord=2, axis=-1).mean()}")
-    exit()
+
     plt.figure(figsize=(3, 10))
     for i in range(10):
         plt.subplot(10, 3, 3*i+1)
