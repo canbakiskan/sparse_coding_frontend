@@ -78,28 +78,9 @@ def extract_patches(images, patch_shape, stride, in_order="NHWC", out_order="NHW
 
     return patches
 
-    # import matplotlib.pyplot as plt
-    # plt.figure(figsize=(10, 10))
-    # for i in range(10):
-    #     for j in range(10):
-    #         plt.subplot(10, 10, 10*i+j+1)
-    #         plt.imshow(
-    #             train_patches[10*i+j].reshape(*args.defense.patch_shape))
-    #         plt.xticks([])
-    #         plt.yticks([])
-    # plt.savefig("patches.pdf")
-    # plt.close()
-
-    # plt.figure(figsize=(5, 5))
-    # plt.imshow(x_train[0])
-    # plt.savefig("image.pdf")
-    # plt.close()
-
 
 def main():
     args = get_arguments()
-
-    data_dir = args.directory + "data/"
 
     train_loader, _ = read_dataset(args)
 

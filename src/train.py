@@ -80,10 +80,6 @@ def main():
     use_cuda = args.use_gpu and torch.cuda.is_available()
     device = torch.device("cuda" if use_cuda else "cpu")
 
-    x_min = 0.0
-    x_max = 1.0
-    # L = round((32 - args.defense.patch_size) / args.defense.stride + 1)
-
     train_loader, test_loader = read_dataset(args)
 
     if args.neural_net.classifier_arch == "resnet":
