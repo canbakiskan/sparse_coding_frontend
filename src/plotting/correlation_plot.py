@@ -1,5 +1,4 @@
 from os.path import join
-import matplotlib.ticker as ticker
 import matplotlib.pyplot as plt
 import torch
 from ..models.resnet import ResNetWide
@@ -16,8 +15,8 @@ device = "cuda"
 classifier = ResNetWide(num_outputs=10).to(device)
 
 classifier.load_state_dict(
-    torch.load(
-        "checkpoints/classifiers/CIFAR10/resnetwide_sgd_cyc_0.0500_NT_ep_100.pt",
+    torch.load(join(
+        'checkpoints', 'classifiers', 'CIFAR10', 'resnetwide_sgd_cyc_0.0500_NT_ep_100.pt'),
         map_location=torch.device(device),
     )
 )
@@ -40,15 +39,13 @@ plt.imshow(
 )
 plt.xticks([])
 plt.yticks([])
-plt.savefig("figs/inner_cnn.pdf")
+plt.savefig(join('figs', 'inner_cnn.pdf'))
 plt.close()
 
 plt.figure(figsize=(10, 5))
 plt.hist(asd.flatten(), 50)
-plt.savefig("figs/hist_cnn.pdf")
+plt.savefig(join('figs', 'hist_cnn.pdf'))
 plt.close()
-breakpoint()
-
 
 nb_cols = 2
 nb_rows = 5
@@ -162,5 +159,5 @@ for i in range(nb_cols * nb_rows):
 
 plt.tight_layout()
 
-plt.savefig("figs/more_correlations_normalized.pdf")
+plt.savefig(join('figs', 'more_correlations_normalized.pdf'))
 plt.close()

@@ -54,9 +54,7 @@ def main():
                     plt.yticks([])
                     plt.xticks([])
 
-        figures_dir = args.directory + "figs/"
-
-        plt.savefig(figures_dir + "dct.pdf")
+        plt.savefig(os.path.join(args.directory, 'figs', "dct.pdf"))
 
         plt.close()
 
