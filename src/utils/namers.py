@@ -69,7 +69,7 @@ def adv_training_params_string(args):
     if args.adv_training.method:
 
         if args.adv_training.norm != 'inf':
-            attack_params_string += f"_L{args.adv_training.norm}"
+            attack_params_string += f"L{args.adv_training.norm}"
 
         adv_training_params_string += f"_{args.adv_training.method}"
         adv_training_params_string += (
