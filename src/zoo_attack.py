@@ -1,3 +1,8 @@
+""" 
+Converted to PyTorch by Can Bakiskan from the original TensorFlow source at https://github.com/IBM/ZOO-Attack
+I tried to be as loyal to the original as possible, 
+but coverted all numpy operations to torch operations which sped things up slightly
+"""
 
 import random
 import sys
