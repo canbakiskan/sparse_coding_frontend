@@ -107,8 +107,7 @@ def save_frontend(args, frontend):
         os.makedirs(os.path.dirname(frontend_ckpt_namer(args)))
 
     frontend_filepath = frontend_ckpt_namer(args)
-    if args.frontend_train_supervised:
-        torch.save(frontend.state_dict(), frontend_filepath)
+    torch.save(frontend.state_dict(), frontend_filepath)
 
     logger.info(f"Saved to {frontend_filepath}")
 
