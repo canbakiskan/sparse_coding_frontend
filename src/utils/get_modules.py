@@ -101,6 +101,8 @@ def load_frontend(args):
 
     print(f"Frontend: {frontend_ckpt_namer(args)}")
 
+    return frontend
+
 
 def get_dictionary(args):
     dict_filepath = dict_file_namer(args)
