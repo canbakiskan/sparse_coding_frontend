@@ -43,19 +43,13 @@ def main():
     for p in model.parameters():
         p.requires_grad = False
 
-    # if not args.adv_testing.skip_clean:
-    #     _, test_loader = read_dataset(args)
-    #     test_loss, test_acc = adversarial_test(model, test_loader)
-    #     print(f"Clean \t loss: {test_loss:.4f} \t acc: {test_acc:.4f}")
-
-    fmodel = PyTorchModel(model, bounds=(0, 1))
-
     x_test, y_test = load_cifar10(n_examples=10000, data_dir=os.path.join(
         args.directory, 'data', 'original_datasets'))
 
     # model below:
-    # Linf eps:8/255 acc:
+    # Linf eps:8/255 acc:59.92
     # L2 eps:0.6 acc:56.56
+    # L2 eps:0.5 acc:64.76
 
     # model = load_model(model_name='Carmon2019Unlabeled',
     #                    dataset='cifar10', threat_model='Linf').to('cuda')
@@ -63,7 +57,7 @@ def main():
     # ours
     # Linf eps:8/255 acc:35.16
     # L2 eps:0.6 acc:56.48
-    # L2 eps:0.5 acc:
+    # L2 eps:0.5 acc:61.09
 
     adversary = AutoAttack(model, norm='L2', eps=0.5,
                            version='custom', attacks_to_run=['apgd-ce', 'apgd-dlr'])
