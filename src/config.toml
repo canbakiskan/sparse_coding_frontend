@@ -60,6 +60,7 @@ nb_restarts = 1 # number of random restarts
 EOT_size = 10 # if EOT is used
 
 rfgsm_alpha = 0.03921568627 # RFGSM step size
+trades_beta=6
 
 [adv_testing]
 save = true # save the attack into a file

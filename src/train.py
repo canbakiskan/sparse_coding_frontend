@@ -33,7 +33,7 @@ from deepillusion.torchattacks import (
     PGD_EOT_sign,
     PGD_smooth
 )
-from deepillusion.torchdefenses import adversarial_epoch, adversarial_test
+from deepillusion.torchdefenses import adversarial_epoch, adversarial_test, trades_epoch
 import sys
 
 logger = logging.getLogger(__name__)
@@ -66,6 +66,7 @@ def construct_adv_args(args, model):
         PGD_smooth=PGD_smooth,
         FGSM=FGSM,
         RFGSM=RFGSM,
+        TRADES=PGD
     )
 
     attack_params = {
@@ -188,7 +189,10 @@ def main():
             adversarial_args=adversarial_args,
         )
 
-        test_args = dict(model=model, test_loader=test_loader)
+        if args.adv_training.method == 'TRADES':
+            train_args['trades_args'] = adversarial_args['attack_args']['attack_params'].copy()
+            train_args['trades_args']['beta'] = args.adv_training.trades_beta
+            del train_args['adversarial_args']
 
         logger.info(args.adv_training.method + " training")
     else:
@@ -199,14 +203,17 @@ def main():
     for epoch in tqdm(range(1, args.neural_net.epochs + 1)):
         start_time = time.time()
 
-        if args.adv_training.method:
+        if args.adv_training.method and args.adv_training.method != 'TRADES':
             train_loss, train_acc = adversarial_epoch(**train_args)
-            test_loss, test_acc = adversarial_test(**test_args)
+
+        elif args.adv_training.method == 'TRADES':
+            train_loss, train_acc = trades_epoch(**train_args)
 
         else:
             train_loss, train_acc = train(
                 model, train_loader, optimizer, scheduler)
-            test_loss, test_acc = test(model, test_loader)
+
+        test_loss, test_acc = test(model, test_loader)
 
         end_time = time.time()
         lr = scheduler.get_lr()[0]
