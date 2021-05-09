@@ -77,7 +77,7 @@ def adv_training_params_string(args):
         )
         if "EOT" in args.adv_training.method:
             adv_training_params_string += f"_Ne_{args.adv_training.EOT_size}"
-        if "PGD" in args.adv_training.method or "CW" in args.adv_training.method:
+        if any(word in 'PGD CW TRADES' for word in args.adv_training.method):
             adv_training_params_string += f"_Ns_{args.adv_training.nb_steps}"
             adv_training_params_string += (
                 f"_ss_{np.int(np.round(args.adv_training.step_size*255))}"
@@ -86,6 +86,10 @@ def adv_training_params_string(args):
         if "FGSM" in args.adv_training.method:
             adv_training_params_string += (
                 f"_a_{np.int(np.round(args.adv_training.rfgsm_alpha*255))}"
+            )
+        if "TRADES" in args.adv_training.method:
+            adv_training_params_string += (
+                f"_b_{args.adv_training.trades_beta}"
             )
 
     return adv_training_params_string
